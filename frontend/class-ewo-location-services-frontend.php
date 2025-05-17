@@ -99,6 +99,17 @@ class Ewo_Location_Services_Frontend {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ewo_location_services_nonce')
         ));
+        // Pasar opciones del admin al JS
+        $listing_options = get_option('ewo_service_listing_options', array());
+        wp_localize_script($this->plugin_name, 'ewoServiceListingOptions', array(
+            'columns' => isset($listing_options['grid_columns']) ? intval($listing_options['grid_columns']) : 3,
+            'per_page' => isset($listing_options['items_per_page']) ? intval($listing_options['items_per_page']) : 8,
+            'show_pagination' => isset($listing_options['show_pagination']) ? $listing_options['show_pagination'] : 'yes',
+            'load_more' => isset($listing_options['load_more']) ? $listing_options['load_more'] : 'no',
+            'listing_mode' => isset($listing_options['listing_mode']) ? $listing_options['listing_mode'] : 'grid',
+            'show_filters' => isset($listing_options['show_filters']) ? $listing_options['show_filters'] : 'yes',
+            'card_color_usage' => isset($listing_options['card_color_usage']) ? $listing_options['card_color_usage'] : 'none',
+        ));
     }
 
     /**

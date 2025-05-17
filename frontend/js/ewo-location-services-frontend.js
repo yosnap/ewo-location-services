@@ -16,11 +16,16 @@
   let lastApiResponse = null; // Variable para almacenar la última respuesta de la API
 
   // --- CONFIGURABLE OPTIONS ---
-  const DEFAULT_COLUMNS = 3; // Number of columns in grid view
-  const DEFAULT_PER_PAGE = 8; // Services per page
+  const DEFAULT_COLUMNS = (window.ewoServiceListingOptions && ewoServiceListingOptions.columns) ? ewoServiceListingOptions.columns : 3;
+  const DEFAULT_PER_PAGE = (window.ewoServiceListingOptions && ewoServiceListingOptions.per_page) ? ewoServiceListingOptions.per_page : 8;
+  const SHOW_PAGINATION = (window.ewoServiceListingOptions && ewoServiceListingOptions.show_pagination === 'yes');
+  const LOAD_MORE = (window.ewoServiceListingOptions && ewoServiceListingOptions.load_more === 'yes');
+  const DEFAULT_LISTING_MODE = (window.ewoServiceListingOptions && ewoServiceListingOptions.listing_mode) ? ewoServiceListingOptions.listing_mode : 'grid';
+  const SHOW_FILTERS = (window.ewoServiceListingOptions && ewoServiceListingOptions.show_filters === 'yes');
+  const CARD_COLOR_USAGE = (window.ewoServiceListingOptions && ewoServiceListingOptions.card_color_usage) ? ewoServiceListingOptions.card_color_usage : 'none';
 
   // --- STATE ---
-  let currentView = 'grid'; // 'grid' or 'list'
+  let currentView = DEFAULT_LISTING_MODE; // 'grid' or 'list'
   let currentPage = 1;
   let servicesData = [];
   let columns = DEFAULT_COLUMNS;
@@ -955,11 +960,31 @@
         </div>
       `);
     }
+    // Filtros (solo si está activado)
+    if (SHOW_FILTERS) {
+      $container.append(`
+        <div class="ewo-filters">
+          <input type="text" id="ewo-service-search" class="ewo-input" placeholder="Search services..." style="max-width: 220px;">
+          <select id="ewo-network-type-filter" class="ewo-input" style="max-width: 180px;">
+            <option value="">All Network Types</option>
+            <option value="Tarana">Tarana</option>
+            <option value="Non-Tarana">Non-Tarana</option>
+          </select>
+          <select id="ewo-service-ordering" class="ewo-input" style="max-width: 180px;">
+            <option value="default">Sort by</option>
+            <option value="speed-desc">Speed (High to Low)</option>
+            <option value="speed-asc">Speed (Low to High)</option>
+            <option value="coverage">Coverage Code</option>
+          </select>
+        </div>
+      `);
+    }
   }
 
   function renderPagination(total) {
     const $container = $('#ewo-services-pagination');
     $container.empty();
+    if (!SHOW_PAGINATION || LOAD_MORE) return;
     const totalPages = Math.ceil(total / perPage);
     if (totalPages <= 1) return;
     let html = '<div class="ewo-pagination">';
@@ -976,16 +1001,34 @@
     $container.html(html);
   }
 
+  function renderLoadMore(total) {
+    const $container = $('#ewo-services-pagination');
+    $container.empty();
+    if (!LOAD_MORE) return;
+    const totalPages = Math.ceil(total / perPage);
+    if ((currentPage * perPage) < total) {
+      $container.html(`<div class="ewo-load-more-container"><button class="ewo-load-more-btn">Load more</button></div>`);
+    }
+  }
+
   // --- MAIN RENDER FUNCTION (MODIFIED) ---
   function renderServices() {
     const $servicesList = $("#ewo-services-list");
     $servicesList.empty();
     // Controls
     renderServiceControls(filteredServices.length);
-    renderPagination(filteredServices.length);
-    // Pagination
-    const startIdx = (currentPage - 1) * perPage;
-    const endIdx = startIdx + perPage;
+    if (LOAD_MORE) {
+      renderLoadMore(filteredServices.length);
+    } else {
+      renderPagination(filteredServices.length);
+    }
+    // Pagination/Load more logic
+    let startIdx = (currentPage - 1) * perPage;
+    let endIdx = startIdx + perPage;
+    if (LOAD_MORE) {
+      endIdx = currentPage * perPage;
+      startIdx = 0;
+    }
     const pageServices = filteredServices.slice(startIdx, endIdx);
     // Layout
     $servicesList.removeClass('ewo-grid ewo-list');
@@ -1026,6 +1069,17 @@
         .find(".ewo-select-service")
         .attr("data-service-id", service.id);
       $serviceItem.attr("data-service-json", JSON.stringify(service));
+      // Card color usage
+      if (CARD_COLOR_USAGE !== 'none' && service.coverage_confidence && service.coverage_confidence.status_color_hex) {
+        if (CARD_COLOR_USAGE === 'border') {
+          $serviceItem.css({
+            'border': '2px solid ' + service.coverage_confidence.status_color_hex,
+            'box-shadow': '0 0 0 1px ' + service.coverage_confidence.status_color_hex
+          });
+        } else if (CARD_COLOR_USAGE === 'background') {
+          $serviceItem.css('background-color', service.coverage_confidence.status_color_hex);
+        }
+      }
       $servicesList.append($serviceItem);
     });
   }
@@ -1046,6 +1100,10 @@
       currentPage = page;
       renderServices();
     }
+  });
+  $(document).on('click', '.ewo-load-more-btn', function () {
+    currentPage++;
+    renderServices();
   });
 
   // --- EVENT HANDLERS FOR FILTERS/ORDERING ---
