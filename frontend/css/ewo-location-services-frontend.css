@@ -1,0 +1,385 @@
+/**
+ * Estilos para la parte pública del plugin.
+ *
+ * @since      1.0.0
+ * @package    Ewo_Location_Services
+ */
+
+/* Estructura General */
+.ewo-location-services {
+    max-width: 800px;
+    margin: 0 auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.ewo-section {
+    display: none;
+    margin-bottom: 30px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.ewo-section.active {
+    display: block;
+}
+
+/* Títulos y Textos */
+.ewo-location-services h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+.ewo-section-description {
+    margin-bottom: 20px;
+    color: #666;
+}
+
+/* Formularios */
+.ewo-form-group {
+    margin-bottom: 20px;
+}
+
+.ewo-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.ewo-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.ewo-form-actions {
+    margin-top: 25px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Botones */
+.ewo-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.ewo-button .dashicons {
+    margin-right: 5px;
+}
+
+.ewo-button-primary {
+    background-color: #0073aa;
+    color: white;
+}
+
+.ewo-button-primary:hover {
+    background-color: #005f8b;
+}
+
+.ewo-button-secondary {
+    background-color: #f7f7f7;
+    color: #555;
+    border: 1px solid #ccc;
+}
+
+.ewo-button-secondary:hover {
+    background-color: #e9e9e9;
+}
+
+/* Efecto de resaltado para el botón de búsqueda */
+@keyframes highlight-button {
+    0% {
+        box-shadow: 0 0 0 rgba(0, 115, 170, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(0, 115, 170, 0.8);
+    }
+
+    100% {
+        box-shadow: 0 0 0 rgba(0, 115, 170, 0.4);
+    }
+}
+
+.ewo-button-highlighted {
+    animation: highlight-button 1.5s ease-in-out;
+}
+
+/* Mapa */
+#ewo-map-container {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+}
+
+/* Elementos de Carga */
+.ewo-loading {
+    display: none;
+    text-align: center;
+    padding: 20px;
+}
+
+.ewo-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #0073aa;
+    border-radius: 50%;
+    animation: ewo-spin 1s linear infinite;
+}
+
+@keyframes ewo-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Mensajes de Error */
+.ewo-error {
+    display: none;
+    padding: 15px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+/* Lista de Servicios */
+.ewo-services-list {
+    margin-bottom: 20px;
+}
+
+.ewo-service-item {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.ewo-service-item:hover {
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.ewo-service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.ewo-service-name {
+    margin: 0;
+    font-size: 18px;
+}
+
+.ewo-service-price {
+    font-weight: bold;
+    color: #0073aa;
+    font-size: 18px;
+}
+
+.ewo-service-description {
+    margin-bottom: 15px;
+    color: #666;
+}
+
+.ewo-service-action {
+    text-align: right;
+}
+
+/* Lista de Addons */
+.ewo-addons-list {
+    margin-bottom: 20px;
+}
+
+.ewo-addon-item {
+    display: flex;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    transition: all 0.2s ease;
+}
+
+.ewo-addon-item:hover {
+    background-color: #f9f9f9;
+}
+
+.ewo-addon-checkbox {
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.ewo-addon-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.ewo-addon-content {
+    flex: 1;
+}
+
+.ewo-addon-name {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+}
+
+.ewo-addon-price {
+    color: #0073aa;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.ewo-addon-description {
+    color: #666;
+}
+
+/* Confirmación */
+.ewo-confirmation-success {
+    text-align: center;
+    padding: 30px 15px;
+}
+
+.ewo-confirmation-success .dashicons {
+    font-size: 60px;
+    width: 60px;
+    height: 60px;
+    color: #46b450;
+    margin-bottom: 20px;
+}
+
+/* Modal de Depuración */
+.ewo-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.ewo-modal-content {
+    position: relative;
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 800px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ewo-modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.ewo-modal-close:hover,
+.ewo-modal-close:focus {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.ewo-debug-content {
+    margin-top: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+    padding: 10px;
+    overflow: auto;
+    max-height: 60vh;
+}
+
+#ewo-debug-json {
+    font-family: monospace;
+    white-space: pre-wrap;
+    font-size: 14px;
+    color: #333;
+}
+
+.ewo-modal-footer {
+    margin-top: 20px;
+    text-align: right;
+}
+
+/* Botón de depuración */
+#ewo-debug-trigger-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9998;
+}
+
+.ewo-button-debug {
+    background-color: #f05a28;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    font-size: 14px;
+}
+
+.ewo-button-debug .dashicons {
+    margin-right: 5px;
+}
+
+.ewo-button-debug:hover {
+    background-color: #d94c1e;
+}
+
+.ewo-button-debug .dashicons {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .ewo-section {
+        padding: 15px;
+    }
+
+    .ewo-service-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .ewo-form-actions {
+        flex-direction: column;
+    }
+
+    .ewo-button {
+        width: 100%;
+        justify-content: center;
+    }
+}

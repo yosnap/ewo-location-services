@@ -1,0 +1,56 @@
+# Archivos y directorios de WordPress
+wp-config.php
+wp-content/advanced-cache.php
+wp-content/backup-db/
+wp-content/backups/
+wp-content/blogs.dir/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/uploads/
+wp-content/mu-plugins/
+wp-content/wp-cache-config.php
+wp-content/plugins/hello.php
+
+# Archivos específicos del plugin
+logs/*.log
+*.log
+*.sql
+*.sqlite
+
+# Archivos de configuración local
+.htaccess
+.env
+
+# Archivos generados por el sistema
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+*.swp
+*.bak
+*.tmp
+*.sublime*
+
+# Directorios y archivos de dependencias
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+yarn.lock
+
+# Directorios y archivos de IDE
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+*.komodoproject
+.komodotools/
+*.tmproj
+*.tmproject
+tmtags
+nbproject/
+*.code-workspace
+
+# Archivos de compilación
+*.min.css
+*.min.js

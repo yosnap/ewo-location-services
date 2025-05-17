@@ -1,0 +1,61 @@
+/**
+ * Ewo Location Services - Instrucciones para la corrección de errores de duplicación de funciones y optimización de endpoints
+ *
+ * Fecha: 17 de mayo de 2025
+ * Actualización: 17 de mayo de 2025 (múltiples cambios)
+ *
+ * PROBLEMAS RESUELTOS:
+ * 1. Se corrigió un error fatal de PHP que ocurría debido a la duplicación de funciones de callback.
+ *    Error específico: "Fatal error: Cannot redeclare Ewo_Location_Services_Admin::settings_section_serviceability_cb()"
+ * 2. Se optimizó la integración con el API de Servicios, utilizando los endpoints específicos en lugar de URLs generales.
+ * 3. Se corrigió el formato de envío del API key en las solicitudes, incluyéndolo en el cuerpo (body) del request
+ *    en lugar de en los headers, conforme a los requisitos del API.
+ *
+ * CAMBIOS REALIZADOS:
+ * 1. Se eliminaron múltiples declaraciones duplicadas de métodos dentro de la clase Ewo_Location_Services_Admin.
+ * 2. Se modificaron las llamadas a add_settings_section() y add_settings_field() para utilizar los métodos de 
+ *    clase como callbacks (array($this, 'nombre_del_método')) en lugar de funciones globales.
+ * 3. Se mantuvieron los métodos de clase necesarios para todas las funciones de callback.
+ * 4. Se eliminó la referencia a 'admin/wisper-serviceability-callbacks.php' del archivo principal del plugin.
+ * 5. Se eliminó el archivo 'admin/wisper-serviceability-callbacks.php' ya que todas sus funciones fueron 
+ *    reemplazadas por métodos dentro de la clase Ewo_Location_Services_Admin.
+ * 6. Se eliminaron campos redundantes de API URL (Service Lookup y Opportunities) en la sección general 
+ *    ya que estos están duplicados en las secciones específicas para cada tipo de endpoint.
+ * 7. Se actualizó el frontend para utilizar correctamente la URL del endpoint específico getServiceableLocationsByLatLng
+ *    en lugar de las URLs generales que fueron eliminadas.
+ * 8. Se optimizó el procesamiento de la respuesta del API para manejar el formato específico del endpoint
+ *    getServiceableLocationsByLatLng y extraer correctamente los datos de serviceableLocations.
+ * 9. Se modificó la forma de envío del API key en todas las solicitudes al API para enviarlo en el cuerpo
+ *    de la solicitud ('api_key' en el body) en lugar de en los headers ('api-key').
+ * 10. Se mejoró el manejo de errores y depuración para mostrar mensajes más específicos cuando la API
+ *    retorna un error o un formato inesperado.
+ *
+ * ARCHIVOS MODIFICADOS:
+ * - /admin/class-ewo-location-services-admin.php: Se corrigieron los métodos duplicados, se cambiaron
+ *   los callbacks para usar métodos de clase y se eliminaron campos y métodos redundantes de URLs.
+ * - /ewo-location-services.php: Se eliminó la línea de inclusión del archivo de callbacks.
+ * - /frontend/class-ewo-location-services-frontend.php: Se actualizó para utilizar los endpoints específicos
+ *   en lugar de URLs generales y se mejoró el procesamiento de la respuesta del API.
+ *
+ * ARCHIVOS ELIMINADOS:
+ * - /admin/wisper-serviceability-callbacks.php: Este archivo fue eliminado ya que todas sus funciones
+ *   han sido reemplazadas por métodos de clase equivalentes en Ewo_Location_Services_Admin.
+ *
+ * PRÓXIMOS PASOS RECOMENDADOS:
+ * 1. Verifique que la configuración del plugin funciona correctamente (guardado y carga de opciones).
+ * 2. Pruebe la funcionalidad de búsqueda por ubicación para confirmar que el procesamiento correcto de
+ *    la respuesta del API getServiceableLocationsByLatLng funciona según lo esperado.
+ * 3. Confirme con el equipo de desarrollo de la API que el formato correcto para enviar el API key 
+ *    es mediante el parámetro 'api_key' en el cuerpo de la solicitud y no en los headers.
+ * 4. Si existiera código externo que dependía de las funciones globales eliminadas, será necesario
+ *    actualizar ese código para que utilice los métodos de clase equivalentes.
+ * 5. Revise cualquier código que pudiera hacer referencia a las opciones eliminadas 
+ *    (dev_service_lookup_url, prod_service_lookup_url, dev_opportunities_url, prod_opportunities_url)
+ *    y actualícelo para que utilice las opciones específicas de cada tipo de endpoint.
+ *
+ * NOTAS ADICIONALES:
+ * - Se creó una copia de seguridad del archivo original como class-ewo-location-services-admin.php.bak
+ * - Se creó una copia de seguridad del archivo eliminado como wisper-serviceability-callbacks.php.bak
+ *
+ * Si tiene alguna pregunta o problema, contacte al desarrollador.
+ */
