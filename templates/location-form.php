@@ -39,25 +39,41 @@ if (!defined('ABSPATH')) {
         </div>
     </div>
     
+    <!-- ===================== Available Services Section ===================== -->
+    <div id="ewo-available-services-section" class="ewo-section active" style="margin-bottom: 30px;">
+        <h2>Available Services</h2>
+        <!-- Controls: filters, ordering, view toggle, columns, pagination -->
+        <div id="ewo-services-controls"></div>
+        <!-- Preloader -->
+        <div id="ewo-loading-services" style="display:none; margin: 2rem 0; text-align:center;">
+            <span class="ewo-spinner"></span> Loading services...
+        </div>
+        <!-- Services List/Grid -->
+        <div id="ewo-services-list"></div>
+        <!-- Pagination -->
+        <div id="ewo-services-pagination"></div>
+    </div>
+
+    <!-- Service Template (used by JS) -->
+    <template id="ewo-service-template">
+        <div class="ewo-service-item">
+            <div class="ewo-service-header">
+                <h3 class="ewo-service-name"></h3>
+                <div class="ewo-service-price"></div>
+            </div>
+            <div class="ewo-service-description"></div>
+            <div class="ewo-service-action">
+                <button class="ewo-button ewo-button-primary ewo-select-service" data-service-id="">
+                    Select
+                </button>
+            </div>
+        </div>
+    </template>
+    
     <!-- Resultados de servicios (inicialmente oculto) -->
     <div id="ewo-services-container" class="ewo-section">
         <h2><?php _e('Available Services', 'ewo-location-services'); ?></h2>
-        <div id="ewo-services-list" class="ewo-services-list"></div>
-        
-        <template id="ewo-service-template">
-            <div class="ewo-service-item">
-                <div class="ewo-service-header">
-                    <h3 class="ewo-service-name"></h3>
-                    <div class="ewo-service-price"></div>
-                </div>
-                <div class="ewo-service-description"></div>
-                <div class="ewo-service-action">
-                    <button class="ewo-button ewo-button-primary ewo-select-service" data-service-id="">
-                        <?php _e('Select', 'ewo-location-services'); ?>
-                    </button>
-                </div>
-            </div>
-        </template>
+        <div class="ewo-services-list"></div>
         
         <div class="ewo-form-actions">
             <button id="ewo-back-to-location" class="ewo-button ewo-button-secondary">
@@ -65,13 +81,11 @@ if (!defined('ABSPATH')) {
             </button>
         </div>
         
-        <!-- Mensaje de carga -->
-        <div id="ewo-loading-services" class="ewo-loading">
+        <div class="ewo-loading" style="display:none;">
             <div class="ewo-spinner"></div>
             <p><?php _e('Loading available services...', 'ewo-location-services'); ?></p>
         </div>
         
-        <!-- Mensaje de error -->
         <div id="ewo-services-error" class="ewo-error">
             <p class="ewo-error-message"></p>
             <button class="ewo-button ewo-button-secondary ewo-retry-button">

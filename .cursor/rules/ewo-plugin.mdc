@@ -1,0 +1,155 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# WordPress Location-Based Service Plugin Development Guide
+
+This guide outlines the steps and components required to develop a WordPress plugin that enables users to find and book services based on their location, integrates with an external API, handles user registration, and manages cross-sell options.
+
+## Plugin Name Suggestion
+
+*   Location Services Booker
+*   GeoService Connect
+*   WP Local Services
+
+## Features
+
+*   Frontend form for location input (map, address, geolocation).
+*   The plugin language must be only in English
+*   Integration with a mapping service (e.g., OpenStreetMap, Google Maps JS API) for map interaction and address geocoding. <sup data-citation="7"><a href="#" title="Reference 7 (source not available)">7</a></sup>
+*   Browser Geolocation API support for automatic location detection. <sup data-citation="5"><a href="#" title="Reference 5 (source not available)">5</a></sup>
+*   Sending latitude and longitude data to an external API with a configurable API key header.
+*   Displaying services and packages received from the API response.
+*   Allowing users to select a service package.
+*   Presenting cross-sell/addon options.
+*   Forms for user details input.
+*   WordPress user account creation upon form submission.
+*   Sending user details to a specific API endpoint (e.g., Opportunities).
+*   Ensuring broad browser compatibility (desktop and mobile).
+*   Admin setting for API environment (Development/Production).
+*   Plugin-specific debug logging system with admin interface for viewing, downloading, and clearing logs.
+*   **"Find now" button triggers service lookup using coordinates derived from the location input field.**
+*   **Location input field is populated via address autocomplete, browser geolocation, or map selection.**
+
+## Technical Requirements
+
+*   WordPress Installation (recent version recommended).
+*   Basic understanding of WordPress plugin development (actions, filters, shortcodes, custom post types, settings API).
+*   Knowledge of PHP, JavaScript, HTML, CSS.
+*   Familiarity with external API integration (HTTP requests).
+*   Consider using a library for API requests (e.g., WordPress HTTP API or a dedicated library like Guzzle via Composer if appropriate).
+*   Understanding of browser Geolocation API.
+
+## Core Components and Architecture
+
+1.  **Plugin Structure:**
+    *   Main plugin file (`.php`)
+    *   Includes directory (for classes, functions)
+    *   Admin directory (for settings page, debug logs UI)
+    *   Frontend directory (for forms, templates, assets)
+    *   Templates directory (for displaying results)
+    *   Logs directory (ensure this is writable by the web server)
+
+2.  **Admin Settings Page:**
+    *   Create a settings page under the WordPress "Settings" or a custom top-level menu.
+    *   Use the WordPress Settings API to register settings.
+    *   Fields for:
+        *   API Environment Select: A dropdown or radio button to choose 'Development' or 'Production'.
+        *   External API Base URL (Development - for service lookup).
+        *   External API Base URL (Production - for service lookup).
+        *   External API Base URL (Development - for opportunities).
+        *   External API Base URL (Production - for opportunities).
+        *   API Key value.
+        *   Any other configuration options required by the API or plugin logic.
+
+3.  **Frontend Forms (via Shortcode or Block):**
+    *   **Location Input Form:**
+        *   A text input field for address (`address-input`). This field's value will represent the selected location.
+        *   A button to trigger browser geolocation ("Use my location").
+        *   An embedded map (OpenStreetMap with Leaflet.js or Google Maps JS API) where a marker can be dragged to select a location. <sup data-citation="7"><a href="#" title="Reference 7 (source not available)">7</a></sup>
+        *   A button labelled "Find now".
+        *   Hidden fields (`latitude`, `longitude`) to store the resulting latitude and longitude. These fields should be updated whenever the `address-input` is populated or the map marker/geolocation provides coordinates.
+    *   **Service Selection Form:**
+        *   Dynamically populated based on the API response for the provided location.
+        *   List available packages with details (name, price, description).
+        *   Radio buttons or checkboxes for package selection.
+    *   **Cross-sell Options Form:**
+        *   Dynamically populated addon options, potentially based on the selected service package or the API response.
+        *   Checkboxes for selecting addons.
+    *   **User Details Form:**
+        *   Fields for username, email, password, name, etc., required for WordPress user registration.
+
+4.  **Location Handling (JavaScript):**
+    *   Implement JavaScript to handle the different location input methods and update the `address-input`, `latitude`, and `longitude` fields accordingly:
+        *   **Address Input:** Implement address autocomplete using a service like Google Place Autocomplete <sup data-citation="3"><a href="#" title="Reference 3 (source not available)">3</a></sup> or a geocoding service like Nominatim. When a user selects an address from autocomplete, populate the `address-input` field and perform geocoding to get latitude/longitude, then update the hidden `latitude` and `longitude` fields.
+        *   **Browser Geolocation (triggered by "Use my location" button):** Use `navigator.geolocation.getCurrentPosition()`. <sup data-citation="5"><a href="#" title="Reference 5 (source not available)">5</a></sup> If successful, perform reverse geocoding (using a service like Google Geocoding API <sup data-citation="2"><a href="#" title="Reference 2 (source not available)">2</a></sup> or Nominatim) on the obtained coordinates to get a human-readable address. Populate the `address-input` field with this address and update the hidden `latitude` and `longitude` fields with the precise geolocation coordinates. Handle cases where the user denies permission.
+        *   **Map Interaction:** When a user drags the map marker or clicks on the map, get the coordinates. Perform reverse geocoding on these coordinates to get an address and populate the `address-input` field. Update the hidden `latitude` and `longitude` fields with the map's coordinates.
+    *   **"Find now" Button Logic:** Attach an event listener to the "Find now" button. When clicked, retrieve the values from the hidden `latitude` and `longitude` fields. If these fields are populated, proceed to the API lookup step. If they are empty (e.g., the user typed an address but autocomplete/geocoding failed), perform geocoding on the `address-input` value before proceeding.
+
+5.  **API Integration (PHP - via AJAX or Form Submission Handler):**
+    *   When the "Find now" action is triggered (via AJAX after latitude/longitude are determined), use the WordPress HTTP API (`wp_remote_post` or `wp_remote_get`) to send an HTTP request to the external API's service lookup endpoint.
+    *   Use the selected API environment setting to determine the correct base URL.
+    *   Include the latitude and longitude from the hidden form data.
+    *   Include the configured API key in the request headers (e.g., `Headers: ['api-key' => get_option('your_plugin_api_key')]`).
+    *   Process the API response. If successful, display the Service Selection Form, populated with the returned data. Handle errors gracefully. Log API requests and responses using the plugin's debug logger. <sup data-citation="1"><a href="#" title="Reference 1 (source not available)">1</a></sup>
+    *   When the User Details Form is submitted, use the WordPress HTTP API to send user data to the API's Opportunities endpoint, again using the correct environment URL and logging the request/response.
+
+6.  **Display Logic (PHP and Templates):**
+    *   Use a template file (`.php`) within your plugin's template directory to render the forms and display API results.
+    *   Load the appropriate template based on the user's progress (location input, service display, etc.).
+    *   Use loops and conditional logic in the template to display services and cross-sell options based on the API data.
+
+7.  **WordPress User Registration (PHP):**
+    *   On submission of the User Details Form, use WordPress functions like `wp_insert_user()` to create a new user account.
+    *   Perform validation on the submitted user data. Log the user registration attempt (success or failure).
+
+8.  **Plugin-Specific Debugging System:**
+    *   Create a function to write log messages to a specific file within the plugin's `logs` directory (ensure directory exists and is writable).
+    *   Include timestamps and severity levels (e.g., INFO, WARNING, ERROR) in log entries.
+    *   Implement an admin page or section (perhaps under the main plugin settings) to:
+        *   Display the contents of the log file.
+        *   Provide a button to download the log file.
+        *   Provide a button to clear the log file.
+    *   Wrap API calls, user registration, and other critical plugin operations with logging statements.
+
+9.  **Add Shortcode or Block:** Register a shortcode or Gutenberg block to allow users to easily place the plugin's functionality on a page.
+
+10. **CSS and JavaScript:** Add styles and scripts for forms, maps, and results display. Ensure responsiveness for mobile devices.
+
+11. **Testing:** Thoroughly test all forms, API interactions (in both dev and prod modes), user registration, debugging system (logging, viewing, downloading, clearing), and browser compatibility. Ensure the "Find now" button correctly uses the derived coordinates regardless of the input method.
+
+## Development Steps (High-Level)
+
+1.  **Set up Plugin File Structure:** Create the main plugin file and necessary directories, including a `logs` directory.
+2.  **Create Admin Settings Page:** Implement the settings page using the Settings API, including fields for API environment, development/production URLs, API Key, and controls for the debugging system.
+3.  **Implement Debugging System:** Create the logging function, file handling logic, and the admin UI for logs. Ensure proper file permissions for the `logs` directory.
+4.  **Develop Frontend Forms:** Create the HTML structure for the location, service, cross-sell, and user detail forms, including the `address-input` field and hidden coordinate fields.
+5.  **Implement Location Handling (JavaScript):** Add JavaScript for address geocoding/autocomplete, browser geolocation, map interaction, and updating the `address-input`, `latitude`, and `longitude` fields. Implement the logic for the "Find now" button to use the coordinates.
+6.  **Integrate with Mapping Library:** Include and initialize the chosen mapping library (Leaflet.js/OpenStreetMap or Google Maps JS API). Be mindful of Google Maps API key requirements and potential costs if usage exceeds the free tier. <sup data-citation="7"><a href="#" title="Reference 7 (source not available)">7</a></sup>
+7.  **Develop API Integration Logic (PHP/AJAX):** Write PHP functions to handle API requests using `wp_remote_post`. Use the selected environment setting to choose the correct URL. Create AJAX endpoints for submitting location data. Include logging for API requests and responses.
+8.  **Create Template Files:** Build the template files to display forms and API results dynamically.
+9.  **Implement User Registration:** Add PHP code to handle user form submission and create WordPress users. Include logging for registration attempts.
+10. **Add Shortcode or Block:** Register a shortcode or Gutenberg block to allow users to easily place the plugin's functionality on a page.
+11. **CSS and JavaScript:** Add styles and scripts for forms, maps, and results display. Ensure responsiveness for mobile devices.
+12. **Testing:** Thoroughly test all forms, API interactions (in both dev and prod modes), user registration, debugging system (logging, viewing, downloading, clearing), and browser compatibility. Ensure the "Find now" button correctly uses the derived coordinates regardless of the input method.
+
+## Compatibility Notes
+
+*   Use standard WordPress functions and APIs where possible for maximum compatibility.
+*   Test on different browsers (Chrome, Firefox, Safari, Edge) and devices (desktop, tablet, mobile).
+*   Ensure JavaScript code is written to be compatible with modern browser standards.
+*   Consider adding polyfills for older browser support if necessary, though focusing on modern browsers is usually sufficient.
+*   The logging system should handle potential issues with file permissions gracefully.
+*   Remember that geolocation accuracy can vary, especially indoors or in urban canyons.
+*   Ensure that the plugin does not conflict with other plugins or themes. Use unique function names and prefixes for your plugin's functions and classes.      
+*   Follow WordPress coding standards for PHP, JavaScript, and CSS to ensure maintainability and compatibility with future WordPress updates.
+*   Consider using a version control system (e.g., Git) for development and collaboration.
+*   Document the code thoroughly, especially for complex logic and API interactions.
+*   Provide clear instructions for users on how to install and configure the plugin, including any dependencies (e.g., API keys, external libraries).
+*   Consider providing a demo or example data for users to test the plugin's functionality.
+*   Ensure that the plugin is secure, especially when handling user data and API keys. Use WordPress's built-in functions for sanitization and validation.
+*   Follow best practices for WordPress plugin development, including proper enqueuing of scripts and styles, using nonces for form submissions, and adhering to the WordPress Plugin Handbook guidelines.
+*   Consider providing a settings export/import feature for users to easily transfer settings between installations.
+
+

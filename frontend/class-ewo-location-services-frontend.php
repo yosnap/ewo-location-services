@@ -177,14 +177,14 @@ class Ewo_Location_Services_Frontend {
         // Preparar los argumentos para la solicitud a la API
         $args = array(
             'headers' => array(
-                'Content-Type' => 'application/json',
-                'api-key' => $api_key // API key en el encabezado
+                'Content-Type' => 'application/json'
+                // Quitar la API key del encabezado
             ),
             'body' => json_encode(array(
                 'latitude' => $latitude,
                 'longitude' => $longitude,
-                'requesting_system' => 'website'
-                // API key ahora va en el encabezado
+                'requesting_system' => 'website',
+                'api-key' => $api_key // Añadir la API key al cuerpo de la solicitud
             )),
             'method' => 'POST',
             'timeout' => 45,
@@ -205,13 +205,14 @@ class Ewo_Location_Services_Frontend {
             $get_url = add_query_arg(array(
                 'latitude' => $latitude,
                 'longitude' => $longitude,
-                'requesting_system' => 'website'
+                'requesting_system' => 'website',
+                'api-key' => $api_key  // Añadir API key en la URL para GET
             ), $api_url);
             
             // Preparar argumentos para GET
             $get_args = array(
                 'headers' => array(
-                    'api-key' => $api_key  // API key en el encabezado
+                    // Quitar API key del encabezado
                 ),
                 'method' => 'GET',
                 'timeout' => 45
@@ -253,9 +254,12 @@ class Ewo_Location_Services_Frontend {
         if (isset($data['serviceableLocations']) && is_array($data['serviceableLocations'])) {
             $processed_data = $data['serviceableLocations'];
             $this->logger->info('Successfully processed serviceableLocations from API response');
+        } elseif (isset($data['return-data']['serviceability-info']) && is_array($data['return-data']['serviceability-info'])) {
+            $processed_data = $data['return-data']['serviceability-info'];
+            $this->logger->info('Found serviceability-info array in return-data');
         } else {
             // Loguear detalles de la estructura recibida para debugging
-            $this->logger->warning('Expected serviceableLocations key not found in API response. Response structure: ' . json_encode(array_keys($data)));
+            $this->logger->warning('Expected serviceableLocations or serviceability-info key not found in API response. Response structure: ' . json_encode(array_keys($data)));
             
             // Verificar si hay mensaje de error en la respuesta
             if (isset($data['errorMessage']) || isset($data['message'])) {
@@ -293,7 +297,8 @@ class Ewo_Location_Services_Frontend {
                 'api-key' => substr($api_key, 0, 4) . '****' // Mostrar solo primeros 4 caracteres por seguridad
             ),
             'request_headers' => array(
-                'api-key' => substr($api_key, 0, 4) . '****' // Mostrar solo primeros 4 caracteres por seguridad
+                'Content-Type' => 'application/json'
+                // API key ahora va en el cuerpo
             ),
             'response_status' => wp_remote_retrieve_response_code($response),
             'response_headers' => wp_remote_retrieve_headers($response),

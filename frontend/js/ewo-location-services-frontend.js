@@ -15,6 +15,24 @@
   let selectedAddons = [];
   let lastApiResponse = null; // Variable para almacenar la última respuesta de la API
 
+  // --- CONFIGURABLE OPTIONS ---
+  const DEFAULT_COLUMNS = 3; // Number of columns in grid view
+  const DEFAULT_PER_PAGE = 8; // Services per page
+
+  // --- STATE ---
+  let currentView = 'grid'; // 'grid' or 'list'
+  let currentPage = 1;
+  let servicesData = [];
+  let columns = DEFAULT_COLUMNS;
+  let perPage = DEFAULT_PER_PAGE;
+
+  // --- FILTERING, ORDERING, AND PRELOADER ---
+  let filteredServices = [];
+  let isLoading = false;
+  let searchQuery = '';
+  let networkTypeFilter = '';
+  let ordering = 'default';
+
   // Inicialización cuando el DOM está listo
   $(document).ready(function () {
     // Inicializar el mapa si el contenedor existe
@@ -127,7 +145,7 @@
       // Mostrar indicador de carga
       $("#ewo-use-my-location").prop("disabled", true);
       $("#ewo-use-my-location").html(
-        '<span class="dashicons dashicons-location"></span> ' + "Localizando..."
+        '<span class="dashicons dashicons-location"></span> ' + "Locating..."
       );
 
       navigator.geolocation.getCurrentPosition(
@@ -150,7 +168,7 @@
           $("#ewo-use-my-location").prop("disabled", false);
           $("#ewo-use-my-location").html(
             '<span class="dashicons dashicons-location"></span> ' +
-              "Usar mi ubicación"
+              "Use my location"
           );
 
           // Animar el botón de búsqueda para llamar la atención
@@ -161,18 +179,18 @@
         },
         // Error
         function (error) {
-          console.error("Error al obtener la ubicación", error);
+          console.error("Error getting your location", error);
 
-          let errorMessage = "Error al obtener tu ubicación.";
+          let errorMessage = "Error getting your location.";
           switch (error.code) {
             case error.PERMISSION_DENIED:
-              errorMessage = "Permiso de geolocalización denegado.";
+              errorMessage = "Geolocation permission denied.";
               break;
             case error.POSITION_UNAVAILABLE:
-              errorMessage = "Información de ubicación no disponible.";
+              errorMessage = "Location information unavailable.";
               break;
             case error.TIMEOUT:
-              errorMessage = "La solicitud de ubicación expiró.";
+              errorMessage = "Location request timed out.";
               break;
           }
 
@@ -183,7 +201,7 @@
           $("#ewo-use-my-location").prop("disabled", false);
           $("#ewo-use-my-location").html(
             '<span class="dashicons dashicons-location"></span> ' +
-              "Usar mi ubicación"
+              "Use my location"
           );
         },
         // Opciones
@@ -194,7 +212,7 @@
         }
       );
     } else {
-      alert("Tu navegador no soporta geolocalización.");
+      alert("Your browser does not support geolocation.");
     }
   }
 
@@ -241,12 +259,12 @@
           }
         } else {
           alert(
-            "No se encontró la dirección. Por favor, intenta con otra dirección o usa el mapa para seleccionar tu ubicación."
+            "Address not found. Please try another address or use the map to select your location."
           );
         }
       },
       error: function () {
-        alert("Error al buscar la dirección. Por favor, intenta de nuevo.");
+        alert("Error searching for the address. Please try again.");
       },
       complete: function () {
         // Restaurar campos
@@ -274,7 +292,7 @@
         }
       },
       error: function () {
-        console.error("Error en geocodificación inversa");
+        console.error("Error in reverse geocoding");
       },
     });
   }
@@ -290,7 +308,7 @@
 
     if (!lat || !lng) {
       alert(
-        "Por favor, selecciona primero una ubicación en el mapa o ingresa una dirección."
+        "Please select a location on the map or enter an address first."
       );
       return;
     }
@@ -299,7 +317,7 @@
 
     // Mostrar sección de servicios y ocultar las demás
     $(".ewo-section").removeClass("active");
-    $("#ewo-services-container").addClass("active");
+    $("#ewo-available-services-section").addClass("active");
 
     // Mostrar indicador de carga y ocultar errores
     $("#ewo-loading-services").show();
@@ -329,7 +347,7 @@
           const errorMessage =
             response.data && response.data.message
               ? response.data.message
-              : "No se pudieron obtener los servicios. Por favor, intenta de nuevo.";
+              : "Could not retrieve services. Please try again.";
 
           showError("#ewo-services-error", errorMessage);
         }
@@ -351,7 +369,7 @@
 
         showError(
           "#ewo-services-error",
-          "Error al conectar con el servidor. Por favor, verifica tu conexión a internet e intenta de nuevo."
+          "Error connecting to the server. Please check your internet connection and try again."
         );
       },
       complete: function () {
@@ -366,84 +384,35 @@
   function displayServices(data) {
     console.log("Datos recibidos:", data); // Debug
 
-    // Manejar el nuevo formato de respuesta con datos de depuración
     let services = [];
 
     if (Array.isArray(data)) {
-      // Si directamente es un array de servicios
       services = data;
     } else if (data.services && Array.isArray(data.services)) {
-      // Si viene en el formato con propiedad 'services'
       services = data.services;
-    } else if (
-      data.serviceableLocations &&
-      Array.isArray(data.serviceableLocations)
-    ) {
-      // Si viene en el formato de 'serviceableLocations' (desde el endpoint getServiceableLocationsByLatLng)
+    } else if (data.serviceableLocations && Array.isArray(data.serviceableLocations)) {
       services = data.serviceableLocations;
     } else if (
       data.raw_response &&
-      data.raw_response.serviceableLocations &&
-      Array.isArray(data.raw_response.serviceableLocations)
+      data.raw_response["return-data"] &&
+      Array.isArray(data.raw_response["return-data"]["serviceability-info"])
     ) {
-      // Si viene encapsulado dentro de 'raw_response'
-      services = data.raw_response.serviceableLocations;
+      services = data.raw_response["return-data"]["serviceability-info"];
     } else if (typeof data === "object" && data !== null) {
-      // Inspeccionar la estructura del objeto para encontrar arrays que puedan contener servicios
-      console.log("Buscando recursivamente servicios en:", Object.keys(data));
-
-      // Buscar en el primer nivel
+      // Buscar el primer array de objetos que tenga coverage_code y network_type
       for (const key in data) {
         if (Array.isArray(data[key]) && data[key].length > 0) {
-          console.log(
-            `Encontrado array en propiedad ${key}, verificando contenido...`
-          );
-          // Verificar si parece un array de servicios (tiene propiedades típicas)
-          if (
-            data[key][0] &&
-            (data[key][0].name || data[key][0].id || data[key][0].price)
-          ) {
-            console.log(`El array en ${key} parece contener servicios válidos`);
+          const first = data[key][0];
+          if (first.coverage_code && first.network_type) {
             services = data[key];
             break;
           }
-        } else if (typeof data[key] === "object" && data[key] !== null) {
-          // Buscar en el segundo nivel
-          for (const subKey in data[key]) {
-            if (
-              Array.isArray(data[key][subKey]) &&
-              data[key][subKey].length > 0
-            ) {
-              console.log(`Verificando array en ${key}.${subKey}...`);
-              if (
-                data[key][subKey][0] &&
-                (data[key][subKey][0].name ||
-                  data[key][subKey][0].id ||
-                  data[key][subKey][0].price)
-              ) {
-                console.log(
-                  `El array en ${key}.${subKey} contiene servicios válidos`
-                );
-                services = data[key][subKey];
-                break;
-              }
-            }
-          }
-          // Si ya encontramos servicios, salir del bucle principal
-          if (services.length > 0) break;
         }
       }
-
-      // Si no se encontraron servicios en la búsqueda recursiva, intentar con propiedades comunes
-      if (services.length === 0) {
-        services = data.services || data.locations || data.items || [];
-      }
     } else {
-      // Fallback para otros casos
       services = [];
     }
 
-    // Asegurarse de que services sea un array antes de continuar
     if (!Array.isArray(services)) {
       console.error("Formato de servicios no válido:", services);
       services = [];
@@ -452,36 +421,15 @@
     if (services.length === 0) {
       showError(
         "#ewo-services-error",
-        "No hay servicios disponibles en tu ubicación en este momento."
+        "No services available in your location at this time."
       );
       return;
     }
 
-    const $servicesList = $("#ewo-services-list");
-    const $template = $("#ewo-service-template");
-
-    services.forEach(function (service) {
-      // Clonar la plantilla
-      const $serviceItem = $($template.html());
-
-      // Llenar con los datos del servicio
-      $serviceItem
-        .find(".ewo-service-name")
-        .text(service.name || "Servicio sin nombre");
-      $serviceItem.find(".ewo-service-price").text(formatPrice(service.price));
-      $serviceItem
-        .find(".ewo-service-description")
-        .text(service.description || "Sin descripción");
-      $serviceItem
-        .find(".ewo-select-service")
-        .attr("data-service-id", service.id);
-
-      // Opcional: añadir más datos como atributos para usarlos después
-      $serviceItem.attr("data-service-json", JSON.stringify(service));
-
-      // Añadir al listado
-      $servicesList.append($serviceItem);
-    });
+    servicesData = services;
+    filteredServices = services;
+    currentPage = 1;
+    applyFiltersAndOrdering();
   }
 
   /**
@@ -511,7 +459,7 @@
       console.error("Error al procesar los datos del servicio", e);
       showError(
         "#ewo-services-error",
-        "Error al seleccionar el servicio. Por favor, intenta de nuevo."
+        "Error selecting the service. Please try again."
       );
     }
   }
@@ -531,11 +479,11 @@
       const $addonItem = $($template.html());
 
       // Llenar con los datos del addon
-      $addonItem.find(".ewo-addon-name").text(addon.name || "Addon sin nombre");
+      $addonItem.find(".ewo-addon-name").text(addon.name || "Unnamed addon");
       $addonItem.find(".ewo-addon-price").text(formatPrice(addon.price));
       $addonItem
         .find(".ewo-addon-description")
-        .text(addon.description || "Sin descripción");
+        .text(addon.description || "No description");
       $addonItem.find(".ewo-addon-select").val(addon.id);
 
       // Añadir al listado
@@ -554,7 +502,7 @@
     const passwordConfirm = $("#ewo-user-password-confirm").val();
 
     if (password !== passwordConfirm) {
-      showError("#ewo-user-error", "Las contraseñas no coinciden.");
+      showError("#ewo-user-error", "Passwords do not match.");
       return;
     }
 
@@ -568,7 +516,7 @@
     const $submitButton = $("#ewo-submit-user");
     const originalButtonText = $submitButton.text();
     $submitButton.prop("disabled", true);
-    $submitButton.text("Procesando...");
+    $submitButton.text("Processing...");
 
     // Ocultar mensajes de error previos
     $("#ewo-user-error").hide();
@@ -610,7 +558,7 @@
           const errorMessage =
             response.data && response.data.message
               ? response.data.message
-              : "Error al procesar tu registro. Por favor, intenta de nuevo.";
+              : "Error processing your registration. Please try again.";
 
           showError("#ewo-user-error", errorMessage);
         }
@@ -618,7 +566,7 @@
       error: function () {
         showError(
           "#ewo-user-error",
-          "Error al conectar con el servidor. Por favor, verifica tu conexión a internet e intenta de nuevo."
+          "Error connecting to the server. Please check your internet connection and try again."
         );
       },
       complete: function () {
@@ -699,7 +647,7 @@
 
     if (!lastApiResponse) {
       alert(
-        "No hay datos de API disponibles para mostrar. Realiza una búsqueda primero."
+        "No API data available to display. Please perform a search first."
       );
       return;
     }
@@ -730,7 +678,7 @@
         });
     } catch (error) {
       console.error("Error al mostrar datos de API:", error);
-      alert("Error al procesar los datos de la API para mostrar en el modal.");
+      alert("Error processing API data for display in the modal.");
     }
   }
 
@@ -762,16 +710,16 @@
     if (services.length > 0) {
       // Crear tabla para visualizar los servicios
       const $table = $(
-        '<table class="ewo-debug-table"><thead><tr><th>ID</th><th>Nombre</th><th>Precio</th><th>Descripción</th></tr></thead><tbody></tbody></table>'
+        '<table class="ewo-debug-table"><thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Description</th></tr></thead><tbody></tbody></table>'
       );
 
       services.forEach(function (service) {
         const $row = $("<tr></tr>");
         $row.append("<td>" + (service.id || "N/A") + "</td>");
-        $row.append("<td>" + (service.name || "Sin nombre") + "</td>");
+        $row.append("<td>" + (service.name || "No name") + "</td>");
         $row.append("<td>" + formatPrice(service.price) + "</td>");
         $row.append(
-          "<td>" + (service.description || "Sin descripción") + "</td>"
+          "<td>" + (service.description || "No description") + "</td>"
         );
 
         $table.find("tbody").append($row);
@@ -780,7 +728,7 @@
       $formattedContainer.append($table);
     } else {
       $formattedContainer.html(
-        "<p>No se encontraron servicios o ubicaciones en la respuesta API.</p>"
+        "<p>No services or locations found in the API response.</p>"
       );
     }
 
@@ -797,24 +745,24 @@
 
       const $structureInfo = $('<div class="ewo-structure-info"></div>');
       $structureInfo.append(
-        "<p><strong>Tipo de respuesta:</strong> " + structure.type + "</p>"
+        "<p><strong>Response type:</strong> " + structure.type + "</p>"
       );
 
       if (structure.keys && structure.keys.length > 0) {
         $structureInfo.append(
-          "<p><strong>Claves:</strong> " + structure.keys.join(", ") + "</p>"
+          "<p><strong>Keys:</strong> " + structure.keys.join(", ") + "</p>"
         );
       }
 
       if (structure.has_array) {
         $structureInfo.append(
-          "<p><strong>Contiene array:</strong> Sí (longitud: " +
+          "<p><strong>Contains array:</strong> Yes (length: " +
             structure.array_length +
             ")</p>"
         );
         $structureInfo.append(
-          "<p><strong>Posible array de servicios:</strong> " +
-            (structure.potential_services ? "Sí" : "No") +
+          "<p><strong>Potential service array:</strong> " +
+            (structure.potential_services ? "Yes" : "No") +
             "</p>"
         );
       }
@@ -823,7 +771,7 @@
 
       // Si hay una estructura anidada, mostrarla
       if (structure.children) {
-        const $childrenTitle = $("<h4>Propiedades anidadas:</h4>");
+        const $childrenTitle = $("<h4>Nested properties:</h4>");
         $structureContainer.append($childrenTitle);
 
         for (const key in structure.children) {
@@ -831,17 +779,17 @@
 
           const $childInfo = $('<div class="ewo-structure-child"></div>');
           $childInfo.append("<h5>" + key + "</h5>");
-          $childInfo.append("<p><strong>Tipo:</strong> " + child.type + "</p>");
+          $childInfo.append("<p><strong>Type:</strong> " + child.type + "</p>");
 
           if (child.has_array) {
             $childInfo.append(
-              "<p><strong>Contiene array:</strong> Sí (longitud: " +
+              "<p><strong>Contains array:</strong> Yes (length: " +
                 child.array_length +
                 ")</p>"
             );
             $childInfo.append(
-              "<p><strong>Posible array de servicios:</strong> " +
-                (child.potential_services ? "Sí" : "No") +
+              "<p><strong>Potential service array:</strong> " +
+                (child.potential_services ? "Yes" : "No") +
                 "</p>"
             );
           }
@@ -851,7 +799,7 @@
       }
     } else {
       $structureContainer.html(
-        "<p>No hay información de estructura disponible.</p>"
+        "<p>No structure information available.</p>"
       );
     }
   }
@@ -873,7 +821,7 @@
     if ($("#ewo-debug-tab-raw").hasClass("active")) {
       content = $("#ewo-debug-json").text();
     } else if ($("#ewo-debug-tab-formatted").hasClass("active")) {
-      content = "SERVICIOS ENCONTRADOS:\n\n";
+      content = "FOUND SERVICES:\n\n";
 
       $("#ewo-debug-formatted-services table tbody tr").each(function () {
         const $row = $(this);
@@ -884,7 +832,7 @@
         content += `${name} (ID: ${id}) - ${price}\n`;
       });
     } else {
-      content = "ANÁLISIS DE ESTRUCTURA DE RESPUESTA API:\n\n";
+      content = "API RESPONSE STRUCTURE ANALYSIS:\n\n";
       content += $("#ewo-debug-structure").text();
     }
 
@@ -903,7 +851,7 @@
     // Mostrar confirmación
     const $button = $("#ewo-debug-copy");
     const originalText = $button.text();
-    $button.text("¡Copiado!");
+    $button.text("¡Copied!");
 
     // Restaurar el texto original después de un tiempo
     setTimeout(function () {
@@ -933,7 +881,7 @@
       // Mostrar indicador de carga
       $("#ewo-search-services").prop("disabled", true);
       const originalButtonText = $("#ewo-search-services").text();
-      $("#ewo-search-services").text("Buscando ubicación...");
+      $("#ewo-search-services").text("Searching location...");
 
       // Usar Nominatim para geocodificación
       $.ajax({
@@ -961,12 +909,12 @@
             searchServices(e);
           } else {
             alert(
-              "No se encontró la dirección. Por favor, intenta con otra dirección o usa el mapa para seleccionar tu ubicación."
+              "Address not found. Please try another address or use the map to select your location."
             );
           }
         },
         error: function () {
-          alert("Error al buscar la dirección. Por favor, intenta de nuevo.");
+          alert("Error searching for the address. Please try again.");
         },
         complete: function () {
           // Restaurar botón
@@ -977,8 +925,187 @@
     } else {
       // No hay ni coordenadas ni dirección
       alert(
-        "Por favor, ingresa una dirección o selecciona un punto en el mapa."
+        "Please enter an address or select a point on the map."
       );
     }
+  }
+
+  // --- UI CONTROLS ---
+  function renderServiceControls(total) {
+    const $container = $('#ewo-services-controls');
+    $container.empty();
+    // Count
+    $container.append(`<div class="ewo-services-count">${total} service${total === 1 ? '' : 's'} found</div>`);
+    // View toggle
+    $container.append(`
+      <div class="ewo-view-toggle">
+        <button class="ewo-toggle-btn" data-view="grid" ${currentView === 'grid' ? 'disabled' : ''}>Grid</button>
+        <button class="ewo-toggle-btn" data-view="list" ${currentView === 'list' ? 'disabled' : ''}>List</button>
+      </div>
+    `);
+    // Columns selector (only for grid)
+    if (currentView === 'grid') {
+      $container.append(`
+        <div class="ewo-columns-select">
+          Columns: <select id="ewo-columns-select">
+            <option value="2" ${columns === 2 ? 'selected' : ''}>2</option>
+            <option value="3" ${columns === 3 ? 'selected' : ''}>3</option>
+            <option value="4" ${columns === 4 ? 'selected' : ''}>4</option>
+          </select>
+        </div>
+      `);
+    }
+  }
+
+  function renderPagination(total) {
+    const $container = $('#ewo-services-pagination');
+    $container.empty();
+    const totalPages = Math.ceil(total / perPage);
+    if (totalPages <= 1) return;
+    let html = '<div class="ewo-pagination">';
+    if (currentPage > 1) {
+      html += `<button class="ewo-page-btn" data-page="${currentPage - 1}">Previous</button>`;
+    }
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="ewo-page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    if (currentPage < totalPages) {
+      html += `<button class="ewo-page-btn" data-page="${currentPage + 1}">Next</button>`;
+    }
+    html += '</div>';
+    $container.html(html);
+  }
+
+  // --- MAIN RENDER FUNCTION (MODIFIED) ---
+  function renderServices() {
+    const $servicesList = $("#ewo-services-list");
+    $servicesList.empty();
+    // Controls
+    renderServiceControls(filteredServices.length);
+    renderPagination(filteredServices.length);
+    // Pagination
+    const startIdx = (currentPage - 1) * perPage;
+    const endIdx = startIdx + perPage;
+    const pageServices = filteredServices.slice(startIdx, endIdx);
+    // Layout
+    $servicesList.removeClass('ewo-grid ewo-list');
+    if (currentView === 'grid') {
+      $servicesList.addClass('ewo-grid');
+      $servicesList.css({
+        display: 'grid',
+        gridTemplateColumns: `repeat(${columns}, 1fr)`
+      });
+    } else {
+      $servicesList.addClass('ewo-list');
+      $servicesList.css({ display: 'block' });
+    }
+    // Render items
+    const $template = $("#ewo-service-template");
+    pageServices.forEach(function (service) {
+      const $serviceItem = $($template.html());
+      $serviceItem
+        .find(".ewo-service-name")
+        .text(
+          service.coverage_code
+            ? `Coverage: ${service.coverage_code} (${service.network_type || ''})`
+            : "Unnamed service"
+        );
+      $serviceItem.find(".ewo-service-price").text(
+        service.max_download_speed_mbps
+          ? `Speed: ${service.max_download_speed_mbps} Mbps`
+          : ""
+      );
+      $serviceItem
+        .find(".ewo-service-description")
+        .text(
+          service.coverage_confidence && service.coverage_confidence.status_text_full
+            ? service.coverage_confidence.status_text_full
+            : "No description"
+        );
+      $serviceItem
+        .find(".ewo-select-service")
+        .attr("data-service-id", service.id);
+      $serviceItem.attr("data-service-json", JSON.stringify(service));
+      $servicesList.append($serviceItem);
+    });
+  }
+
+  // --- EVENT HANDLERS ---
+  $(document).on('click', '.ewo-toggle-btn', function () {
+    currentView = $(this).data('view');
+    currentPage = 1;
+    renderServices();
+  });
+  $(document).on('change', '#ewo-columns-select', function () {
+    columns = parseInt($(this).val(), 10);
+    renderServices();
+  });
+  $(document).on('click', '.ewo-page-btn', function () {
+    const page = parseInt($(this).data('page'), 10);
+    if (!isNaN(page)) {
+      currentPage = page;
+      renderServices();
+    }
+  });
+
+  // --- EVENT HANDLERS FOR FILTERS/ORDERING ---
+  $(document).on('input', '#ewo-service-search', function () {
+    searchQuery = $(this).val();
+    applyFiltersAndOrdering();
+  });
+  $(document).on('change', '#ewo-network-type-filter', function () {
+    networkTypeFilter = $(this).val();
+    applyFiltersAndOrdering();
+  });
+  $(document).on('change', '#ewo-service-ordering', function () {
+    ordering = $(this).val();
+    applyFiltersAndOrdering();
+  });
+
+  // Show/hide preloader
+  function setPreloader(visible) {
+    isLoading = visible;
+    if (visible) {
+      $('#ewo-loading-services').show();
+    } else {
+      $('#ewo-loading-services').hide();
+    }
+  }
+
+  // Apply filters and ordering to servicesData
+  function applyFiltersAndOrdering() {
+    setPreloader(true);
+    setTimeout(() => { // Simulate async for UX
+      let result = [...servicesData];
+      // Search filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter(s =>
+          (s.coverage_code && s.coverage_code.toLowerCase().includes(q)) ||
+          (s.network_type && s.network_type.toLowerCase().includes(q)) ||
+          (s.coverage_confidence && s.coverage_confidence.status_text_full && s.coverage_confidence.status_text_full.toLowerCase().includes(q))
+        );
+      }
+      // Network type filter
+      if (networkTypeFilter) {
+        result = result.filter(s => s.network_type === networkTypeFilter);
+      }
+      // Ordering
+      if (ordering === 'speed-desc') {
+        result.sort((a, b) => (b.max_download_speed_mbps || 0) - (a.max_download_speed_mbps || 0));
+      } else if (ordering === 'speed-asc') {
+        result.sort((a, b) => (a.max_download_speed_mbps || 0) - (b.max_download_speed_mbps || 0));
+      } else if (ordering === 'coverage') {
+        result.sort((a, b) => {
+          if (!a.coverage_code) return 1;
+          if (!b.coverage_code) return -1;
+          return a.coverage_code.localeCompare(b.coverage_code);
+        });
+      }
+      filteredServices = result;
+      currentPage = 1;
+      renderServices();
+      setPreloader(false);
+    }, 200); // Simulate loading
   }
 })(jQuery);

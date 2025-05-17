@@ -140,6 +140,16 @@ class Ewo_Location_Services_Admin {
             $this->plugin_name . '-api-auth-tester',
             array($this, 'display_plugin_api_auth_tester_page')
         );
+
+        // Add Service Listing Settings submenu
+        add_submenu_page(
+            $this->plugin_name,
+            __('Service Listing Settings', 'ewo-location-services'),
+            __('Service Listing Settings', 'ewo-location-services'),
+            'manage_options',
+            $this->plugin_name . '-service-listing-settings',
+            array($this, 'display_service_listing_settings_page')
+        );
     }
 
     /**
@@ -176,6 +186,21 @@ class Ewo_Location_Services_Admin {
      */
     public function display_plugin_api_auth_tester_page() {
         include_once 'partials/ewo-location-services-admin-api-auth-tester.php';
+    }
+
+    public function display_service_listing_settings_page() {
+        ?>
+        <div class="wrap">
+            <h1>Service Listing Settings</h1>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('ewo_service_listing_options_group');
+                do_settings_sections('ewo_service_listing_options');
+                submit_button();
+                ?>
+            </form>
+        </div>
+        <?php
     }
 
     /**
@@ -444,6 +469,124 @@ class Ewo_Location_Services_Admin {
             array($this, 'settings_field_prod_get_opportunity_url_cb'),
             'ewo_location_services_options',
             'ewo_location_services_opportunity'
+        );
+
+        // Register new settings for service listing
+        register_setting(
+            'ewo_service_listing_options_group',
+            'ewo_service_listing_options'
+        );
+        add_settings_section(
+            'ewo_service_listing_main',
+            __('Service Listing Display Options', 'ewo-location-services'),
+            function() {
+                echo '<p>Configure how the available services are displayed on the frontend.</p>';
+            },
+            'ewo_service_listing_options'
+        );
+        // Default mode
+        add_settings_field(
+            'listing_mode',
+            __('Default Listing Mode', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['listing_mode']) ? $opts['listing_mode'] : 'grid';
+                echo '<select name="ewo_service_listing_options[listing_mode]">';
+                echo '<option value="grid"' . selected($val, 'grid', false) . '>Grid</option>';
+                echo '<option value="list"' . selected($val, 'list', false) . '>List</option>';
+                echo '</select>';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
+        );
+        // Grid columns
+        add_settings_field(
+            'grid_columns',
+            __('Grid Columns', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['grid_columns']) ? intval($opts['grid_columns']) : 3;
+                echo '<select name="ewo_service_listing_options[grid_columns]">';
+                for ($i = 2; $i <= 4; $i++) {
+                    echo '<option value="' . $i . '"' . selected($val, $i, false) . '>' . $i . '</option>';
+                }
+                echo '</select>';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
+        );
+        // Show filters
+        add_settings_field(
+            'show_filters',
+            __('Show Filters', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['show_filters']) ? $opts['show_filters'] : 'yes';
+                echo '<select name="ewo_service_listing_options[show_filters]">';
+                echo '<option value="yes"' . selected($val, 'yes', false) . '>Yes</option>';
+                echo '<option value="no"' . selected($val, 'no', false) . '>No</option>';
+                echo '</select>';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
+        );
+        // Show pagination
+        add_settings_field(
+            'show_pagination',
+            __('Show Pagination', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['show_pagination']) ? $opts['show_pagination'] : 'yes';
+                echo '<select name="ewo_service_listing_options[show_pagination]">';
+                echo '<option value="yes"' . selected($val, 'yes', false) . '>Yes</option>';
+                echo '<option value="no"' . selected($val, 'no', false) . '>No</option>';
+                echo '</select>';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
+        );
+        // Items per page
+        add_settings_field(
+            'items_per_page',
+            __('Items Per Page', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['items_per_page']) ? intval($opts['items_per_page']) : 8;
+                echo '<input type="number" min="1" max="50" name="ewo_service_listing_options[items_per_page]" value="' . esc_attr($val) . '" style="width:60px;">';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
+        );
+        // Load More button
+        add_settings_field(
+            'load_more',
+            __('Use "Load More" Button', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['load_more']) ? $opts['load_more'] : 'no';
+                echo '<select name="ewo_service_listing_options[load_more]">';
+                echo '<option value="yes"' . selected($val, 'yes', false) . '>Yes</option>';
+                echo '<option value="no"' . selected($val, 'no', false) . '>No</option>';
+                echo '</select>';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
+        );
+        // Card color usage
+        add_settings_field(
+            'card_color_usage',
+            __('Use status_color_hex for', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['card_color_usage']) ? $opts['card_color_usage'] : 'none';
+                echo '<select name="ewo_service_listing_options[card_color_usage]">';
+                echo '<option value="none"' . selected($val, 'none', false) . '>None</option>';
+                echo '<option value="border"' . selected($val, 'border', false) . '>Card Border</option>';
+                echo '<option value="background"' . selected($val, 'background', false) . '>Card Background</option>';
+                echo '</select>';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
         );
     }
 
