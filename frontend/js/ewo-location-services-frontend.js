@@ -45,6 +45,34 @@
   let networkTypeFilter = '';
   let ordering = 'default';
 
+  // --- PRELOADER GLOBAL ---
+  window.ewoShowPreloader = function(message) {
+    if ($('#ewo-global-preloader').length === 0) {
+      $('body').append('<div id="ewo-global-preloader" style="display:none;position:fixed;z-index:9999;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.7);display:flex;align-items:center;justify-content:center;"><div class="ewo-loading"><span class="ewo-spinner"></span><span class="ewo-preloader-message">Loading...</span></div></div>');
+    } else {
+      // Asegurar que el preloader tenga el estilo correcto si ya existe
+      $('#ewo-global-preloader').css({
+        position: 'fixed',
+        zIndex: 9999,
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        background: 'rgba(255,255,255,0.7)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      });
+    }
+    $('#ewo-global-preloader .ewo-preloader-message').text(message || 'Loading...');
+    $('#ewo-global-preloader').show();
+    // Forzar que el spinner y mensaje sean visibles aunque el CSS global oculte .ewo-loading
+    $('#ewo-global-preloader .ewo-loading').css('display', 'block');
+  };
+  window.ewoHidePreloader = function() {
+    $('#ewo-global-preloader').hide();
+  };
+
   // Inicialización cuando el DOM está listo
   $(document).ready(function () {
     // Cambiar estilo de pasos según config
@@ -163,6 +191,9 @@
     function setLatLngFromAutocomplete(lat, lon) {
       $('#ewo-latitude').val(lat);
       $('#ewo-longitude').val(lon);
+      // Guardar en localStorage
+      localStorage.setItem('ewo_latitude', lat);
+      localStorage.setItem('ewo_longitude', lon);
       if (typeof map !== 'undefined' && map) {
         map.setView([lat, lon], 15);
         if (typeof marker !== 'undefined' && marker) {
@@ -413,6 +444,35 @@
         }
       });
     }
+
+    // Guardar plan seleccionado en localStorage cuando se selecciona un plan
+    $(document).on('change', 'input[name="ewo-plan-radio"]', function() {
+      const planStr = decodeURIComponent($(this).val());
+      try {
+        localStorage.setItem('ewo_selected_plan', planStr);
+      } catch (e) {}
+    });
+
+    // Guardar addons seleccionados en localStorage cuando se seleccionan
+    $(document).on('change', '.ewo-addon-select', function() {
+      const selectedAddons = [];
+      $('.ewo-addon-select:checked').each(function() {
+        selectedAddons.push($(this).val());
+      });
+      localStorage.setItem('ewo_selected_addons', JSON.stringify(selectedAddons));
+    });
+
+    // Guardar datos de usuario en localStorage al completar el formulario de usuario
+    $('#ewo-user-form').on('change input', 'input, select', function() {
+      const userData = {
+        first_name: $('#ewo-user-first-name').val(),
+        last_name: $('#ewo-user-last-name').val(),
+        email: $('#ewo-user-email').val(),
+        username: $('#ewo-user-username').val(),
+        mobile: $('#ewo-user-mobile').val()
+      };
+      localStorage.setItem('ewo_user_data', JSON.stringify(userData));
+    });
   });
 
   /**
@@ -470,6 +530,9 @@
   function updateCoordinates(lat, lng) {
     $("#ewo-latitude").val(lat);
     $("#ewo-longitude").val(lng);
+    // Guardar en localStorage
+    localStorage.setItem('ewo_latitude', lat);
+    localStorage.setItem('ewo_longitude', lng);
   }
 
   /**
@@ -631,26 +694,19 @@
    */
   function searchServices(e) {
     if (e) e.preventDefault();
-
     const lat = $("#ewo-latitude").val().trim();
     const lng = $("#ewo-longitude").val().trim();
-
     if (!lat || !lng) {
       alert(
         "Please select a location on the map or enter an address first."
       );
       return;
     }
-
     // Mostrar sección de servicios y ocultar las demás
     $(".ewo-section").removeClass("active");
     $("#ewo-available-services-section").addClass("active");
-
-    // Mostrar indicador de carga y ocultar errores
-    $("#ewo-loading-services").show();
-    $("#ewo-services-error").hide();
-    $("#ewo-services-list").empty();
-
+    // Mostrar preloader global
+    window.ewoShowPreloader('Loading services...');
     // Realizar la solicitud AJAX al servidor
     $.ajax({
       url: ewoLocationServices.ajax_url,
@@ -662,11 +718,9 @@
         longitude: lng,
       },
       success: function (response) {
-        console.log("Respuesta API recibida:", response); // Debug
-
+        window.ewoHidePreloader();
         // Guardar la respuesta para la depuración
         lastApiResponse = response;
-
         if (response.success && response.data) {
           displayServices(response.data);
         } else {
@@ -675,14 +729,12 @@
             response.data && response.data.message
               ? response.data.message
               : "Could not retrieve services. Please try again.";
-
           showError("#ewo-services-error", errorMessage);
         }
       },
       error: function (jqXHR, textStatus, errorThrown) {
+        window.ewoHidePreloader();
         console.error("Error en solicitud AJAX:", textStatus, errorThrown);
-
-        // Guardar también los errores para depuración
         lastApiResponse = {
           error: true,
           status: textStatus,
@@ -693,14 +745,13 @@
             responseText: jqXHR.responseText,
           },
         };
-
         showError(
           "#ewo-services-error",
           "Error connecting to the server. Please check your internet connection and try again."
         );
       },
       complete: function () {
-        $("#ewo-loading-services").hide();
+        window.ewoHidePreloader();
       },
     });
   }
@@ -791,9 +842,10 @@
     try {
       selectedService = JSON.parse(serviceDataStr);
       $("#ewo-selected-service").val(serviceId);
-      // Nuevo: obtener coverage_code y mostrar paso de planes
+      // Guardar coverage_code en localStorage
       if (selectedService.coverage_code) {
-        getPlansForCoverage(selectedService.coverage_code);
+        localStorage.setItem('ewo_coverage_code', selectedService.coverage_code);
+        window.ewoGetPlansForCoverage(selectedService.coverage_code);
       } else {
         alert('No coverage_code found for this service.');
       }
@@ -804,166 +856,6 @@
         "Error selecting the service. Please try again."
       );
     }
-  }
-
-  /**
-   * Función para obtener los planes usando coverage_code
-   */
-  function getPlansForCoverage(coverageCode) {
-    // Mostrar preloader o limpiar lista
-    $('#ewo-plan-list').html('<div class="ewo-loading"><span class="ewo-spinner"></span> Loading plans...</div>');
-    // Mostrar el paso de planes
-    showPlanSection();
-    // Llamada AJAX al backend
-    $.ajax({
-      url: ewoLocationServices.ajax_url,
-      type: 'POST',
-      data: {
-        action: 'ewo_get_packages',
-        nonce: ewoLocationServices.nonce,
-        coverage_code: coverageCode
-      },
-      success: function(response) {
-        if (response.success && response.data && Array.isArray(response.data.packages)) {
-          renderPlans(response.data.packages);
-        } else {
-          $('#ewo-plan-list').html('<div class="ewo-error">No plans found for this service.</div>');
-        }
-      },
-      error: function() {
-        $('#ewo-plan-list').html('<div class="ewo-error">Error loading plans. Please try again.</div>');
-      }
-    });
-  }
-
-  /**
-   * Función para mostrar los planes y permitir selección
-   */
-  function renderPlans(plans) {
-    let html = '<div class="ewo-plan-options">';
-    plans.forEach(function(plan, idx) {
-      html += `<div class="ewo-plan-item">
-        <input type="radio" name="ewo-plan-radio" id="ewo-plan-radio-${idx}" value="${encodeURIComponent(JSON.stringify(plan))}" ${idx === 0 ? 'checked' : ''}>
-        <label for="ewo-plan-radio-${idx}">
-          <strong>${plan.plan_name || 'Unnamed Plan'}</strong><br>
-          <span>${plan.plan_description || ''}</span><br>
-          <span>Price: $${plan.price || '0.00'}</span>
-        </label>
-      </div>`;
-    });
-    html += '</div>';
-    $('#ewo-plan-list').html(html);
-    // Seleccionar el primer plan por defecto
-    selectedPlan = plans[0] || null;
-    // Evento para cambiar de plan
-    $('input[name="ewo-plan-radio"]').on('change', function() {
-      const planStr = decodeURIComponent($(this).val());
-      selectedPlan = JSON.parse(planStr);
-    });
-  }
-
-  /**
-   * Mostrar el paso de planes
-   */
-  function showPlanSection() {
-    $(".ewo-section").removeClass("active");
-    $("#ewo-plan-container").addClass("active");
-    setActiveStep(3);
-  }
-
-  /**
-   * Navegación: continuar a Your Information desde Plan
-   */
-  $('#ewo-continue-to-user').off('click').on('click', function(e) {
-    e.preventDefault();
-    if (!selectedPlan) {
-      alert('Please select a plan.');
-      return;
-    }
-    // Guardar el plan seleccionado para el envío final
-    window.ewoSelectedPlan = selectedPlan;
-    showUserSection();
-  });
-
-  /**
-   * Maneja el envío del formulario de usuario
-   */
-  function submitUserForm(e) {
-    e.preventDefault();
-    // Validar contraseñas solo si el usuario no está logueado
-    if (!(window.ewoUserData && window.ewoUserData.logged_in)) {
-    const password = $("#ewo-user-password").val();
-    const passwordConfirm = $("#ewo-user-password-confirm").val();
-    if (password !== passwordConfirm) {
-        showError("#ewo-user-error", "Passwords do not match.");
-      return;
-    }
-    }
-    // Recopilar addons seleccionados
-    selectedAddons = [];
-    $(".ewo-addon-select:checked").each(function () {
-      selectedAddons.push($(this).val());
-    });
-    const $submitButton = $("#ewo-submit-user");
-    const originalButtonText = $submitButton.text();
-    $submitButton.prop("disabled", true);
-    $submitButton.text("Processing...");
-    $("#ewo-user-error").hide();
-    // Preparar datos del formulario
-    const formData = {
-      action: "ewo_submit_user",
-      nonce: ewoLocationServices.nonce,
-      first_name: $("#ewo-user-first-name").val(),
-      last_name: $("#ewo-user-last-name").val(),
-      email: $("#ewo-user-email").val(),
-      service_id: $("#ewo-selected-service").val(),
-      addons: selectedAddons,
-    };
-    if (!(window.ewoUserData && window.ewoUserData.logged_in)) {
-      formData.username = $("#ewo-user-username").val();
-      formData.password = $("#ewo-user-password").val();
-    }
-    // Enviar solicitud AJAX
-    $.ajax({
-      url: ewoLocationServices.ajax_url,
-      type: "POST",
-      data: formData,
-      success: function (response) {
-        // Guardar la respuesta para la depuración
-        lastApiResponse = response;
-
-        if (response.success) {
-          // Mostrar mensaje de éxito
-          showConfirmationSection();
-
-          // Redirigir después de un tiempo si se proporciona una URL
-          if (response.data && response.data.redirect) {
-            setTimeout(function () {
-              window.location.href = response.data.redirect;
-            }, 3000);
-          }
-        } else {
-          // Mostrar error
-          const errorMessage =
-            response.data && response.data.message
-              ? response.data.message
-              : "Error processing your registration. Please try again.";
-
-          showError("#ewo-user-error", errorMessage);
-        }
-      },
-      error: function () {
-        showError(
-          "#ewo-user-error",
-          "Error connecting to the server. Please check your internet connection and try again."
-        );
-      },
-      complete: function () {
-        // Restaurar botón
-        $submitButton.prop("disabled", false);
-        $submitButton.text(originalButtonText);
-      },
-    });
   }
 
   /**
@@ -1106,6 +998,9 @@
     $('#ewo-form-steps .ewo-step[data-step="' + step + '"]').addClass('active');
     renderCustomSteps();
   }
+
+  // Exponer setActiveStep globalmente
+  window.setActiveStep = setActiveStep;
 
   /**
    * Muestra un mensaje de error
@@ -1632,5 +1527,48 @@
     structuredAddress.city = data.address.city || data.address.town || data.address.village || '';
     structuredAddress.state = data.address.state || '';
     structuredAddress.zip = data.address.postcode || '';
+  }
+
+  // Reemplazar preloader en envío de usuario
+  function submitUserForm(e) {
+    e.preventDefault();
+    // ... validaciones ...
+    window.ewoShowPreloader('Processing user data...');
+    // ...
+    $.ajax({
+      url: ewoLocationServices.ajax_url,
+      type: "POST",
+      data: formData,
+      success: function (response) {
+        window.ewoHidePreloader();
+        lastApiResponse = response;
+        if (response.success) {
+          showConfirmationSection();
+          if (response.data && response.data.redirect) {
+            setTimeout(function () {
+              window.location.href = response.data.redirect;
+            }, 3000);
+          }
+        } else {
+          const errorMessage =
+            response.data && response.data.message
+              ? response.data.message
+              : "Error processing your registration. Please try again.";
+          showError("#ewo-user-error", errorMessage);
+        }
+      },
+      error: function () {
+        window.ewoHidePreloader();
+        showError(
+          "#ewo-user-error",
+          "Error connecting to the server. Please check your internet connection and try again."
+        );
+      },
+      complete: function () {
+        window.ewoHidePreloader();
+        $submitButton.prop("disabled", false);
+        $submitButton.text(originalButtonText);
+      },
+    });
   }
 })(jQuery);
