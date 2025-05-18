@@ -244,6 +244,7 @@ class Ewo_Location_Services {
             'step_icon_3' => isset($listing_options['step_icon_3']) ? $listing_options['step_icon_3'] : 'location',
             'step_icon_4' => isset($listing_options['step_icon_4']) ? $listing_options['step_icon_4'] : 'location',
             'step_icon_5' => isset($listing_options['step_icon_5']) ? $listing_options['step_icon_5'] : 'location',
+            'show_form_steps' => isset($listing_options['show_form_steps']) ? $listing_options['show_form_steps'] : 'yes',
         ));
     }
 }

@@ -675,20 +675,21 @@ class Ewo_Location_Services_Admin {
             'ewo_service_listing_options',
             'ewo_service_listing_main'
         );
-        // Form Steps Style
+        // Form Steps Style (mover aquí, antes de los demás campos de personalización)
         $opts = get_option('ewo_service_listing_options');
         add_settings_field(
             'form_steps_style',
             __('Form Steps Style', 'ewo-location-services'),
             function() use ($opts) {
                 $value = isset($opts['form_steps_style']) ? $opts['form_steps_style'] : 'progress_bar';
-                echo '<select name="ewo_service_listing_options[form_steps_style]">';
+                echo '<select id="ewo-form-steps-style" name="ewo_service_listing_options[form_steps_style]">';
                 echo '<option value="progress_bar"' . selected($value, 'progress_bar', false) . '>Progress Bar</option>';
                 echo '<option value="circles"' . selected($value, 'circles', false) . '>Circles</option>';
+                echo '<option value="none"' . selected($value, 'none', false) . '>None</option>';
                 echo '</select>';
             },
-            'ewo_service_listing_options',
-            'ewo_service_listing_main'
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
         );
         // Active Step Color
         add_settings_field(
@@ -824,20 +825,34 @@ class Ewo_Location_Services_Admin {
                 'ewo_form_steps_customization'
             );
         }
-        // JS para alternar campos según el tipo de icono
+        // JS para alternar campos según el tipo de icono y el estilo de pasos
         add_action('admin_footer', function() {
             $screen = get_current_screen();
             if ($screen && strpos($screen->id, 'ewo-location-services') !== false) {
                 ?>
                 <script>
                 jQuery(function($){
-                    function toggleIconFields() {
+                    function toggleStepCustomizationFields() {
+                        var style = $('#ewo-form-steps-style').val();
+                        if (style === 'none') {
+                            // Oculta todos los campos excepto el select de estilo
+                            $('#ewo-form-steps-style').closest('tr').siblings().hide();
+                            return;
+                        } else {
+                            $('#ewo-form-steps-style').closest('tr').siblings().show();
+                        }
+                        // Ahora controlar los iconos
                         var type = $('#ewo-step-icon-type').val();
-                        $('.ewo-step-icon-dashicon-row').closest('tr').toggle(type === 'dashicons');
-                        $('.ewo-step-icon-svg-row').closest('tr').toggle(type === 'svg');
+                        if (type === 'none') {
+                            $('.ewo-step-icon-dashicon-row').closest('tr').hide();
+                            $('.ewo-step-icon-svg-row').closest('tr').hide();
+                        } else {
+                            $('.ewo-step-icon-dashicon-row').closest('tr').toggle(type === 'dashicons');
+                            $('.ewo-step-icon-svg-row').closest('tr').toggle(type === 'svg');
+                        }
                     }
-                    $('#ewo-step-icon-type').on('change', toggleIconFields);
-                    toggleIconFields(); // Ejecutar SIEMPRE al cargar
+                    $('#ewo-form-steps-style, #ewo-step-icon-type').on('change', toggleStepCustomizationFields);
+                    toggleStepCustomizationFields();
                     // Media uploader para SVG
                     $('.ewo-upload-svg').on('click', function(e){
                         e.preventDefault();

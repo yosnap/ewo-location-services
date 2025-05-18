@@ -17,8 +17,8 @@ if (!defined('ABSPATH')) {
     <ol id="ewo-form-steps" class="ewo-form-steps ewo-form-steps-progress-bar">
         <li class="ewo-step active" data-step="1">1. Location</li>
         <li class="ewo-step" data-step="2">2. Service</li>
-        <li class="ewo-step" data-step="3">3. Addons</li>
-        <li class="ewo-step" data-step="4">4. Your Information</li>
+        <li class="ewo-step" data-step="3">3. Your Information</li>
+        <li class="ewo-step" data-step="4">4. Addons</li>
         <li class="ewo-step" data-step="5">5. Confirmation</li>
     </ol>
     <div id="ewo-form-steps-progress" style="display:none;"></div>
@@ -130,10 +130,10 @@ if (!defined('ABSPATH')) {
         </template>
         
         <div class="ewo-form-actions">
-            <button id="ewo-back-to-services" class="ewo-button ewo-button-secondary">
+            <button id="ewo-back-to-user" class="ewo-button ewo-button-secondary">
                 <?php _e('Back', 'ewo-location-services'); ?>
             </button>
-            <button id="ewo-continue-to-user" class="ewo-button ewo-button-primary">
+            <button id="ewo-continue-to-confirmation" class="ewo-button ewo-button-primary">
                 <?php _e('Continue', 'ewo-location-services'); ?>
             </button>
         </div>
@@ -179,11 +179,11 @@ if (!defined('ABSPATH')) {
             <div id="ewo-selected-addons-container"></div>
             
             <div class="ewo-form-actions">
-                <button id="ewo-back-to-addons" class="ewo-button ewo-button-secondary">
+                <button id="ewo-back-to-services" class="ewo-button ewo-button-secondary">
                     <?php _e('Back', 'ewo-location-services'); ?>
                 </button>
-                <button type="submit" id="ewo-submit-user" class="ewo-button ewo-button-primary">
-                    <?php _e('Complete Registration', 'ewo-location-services'); ?>
+                <button type="submit" id="ewo-continue-to-addons" class="ewo-button ewo-button-primary">
+                    <?php _e('Continue', 'ewo-location-services'); ?>
                 </button>
             </div>
         </form>

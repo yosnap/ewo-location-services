@@ -77,8 +77,9 @@
     $("#ewo-back-to-location").on("click", showLocationSection);
     $("#ewo-change-location-btn").on("click", showLocationSection);
     $("#ewo-back-to-services").on("click", showServicesSection);
-    $("#ewo-back-to-addons").on("click", showAddonsSection);
-    $("#ewo-continue-to-user").on("click", showUserSection);
+    $("#ewo-back-to-user").on("click", showUserSection);
+    $("#ewo-continue-to-addons").on("click", showAddonsSection);
+    $("#ewo-continue-to-confirmation").on("click", showConfirmationSection);
 
     // Manejar selección de servicio (evento delegado)
     $(document).on("click", ".ewo-select-service", selectService);
@@ -335,6 +336,13 @@
       // Inicializar autocompletado aquí también
       initAddressAutocomplete();
     };
+
+    // Ocultar barra de pasos si la opción está en 'no' o 'none'
+    if (window.ewoServiceListingOptions && (window.ewoServiceListingOptions.show_form_steps === 'no' || window.ewoServiceListingOptions.form_steps_style === 'none')) {
+      $('#ewo-form-steps, #ewo-form-steps-progress').hide();
+      // No renderizar pasos
+      return;
+    }
   });
 
   /**
@@ -889,16 +897,16 @@
   function showAddonsSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-addons-container").addClass("active");
-    if (window.ewoCurrentStep !== 3) {
-      setActiveStep(3);
+    if (window.ewoCurrentStep !== 4) {
+      setActiveStep(4);
     }
   }
 
   function showUserSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-user-container").addClass("active");
-    if (window.ewoCurrentStep !== 4) {
-      setActiveStep(4);
+    if (window.ewoCurrentStep !== 3) {
+      setActiveStep(3);
     }
   }
 
