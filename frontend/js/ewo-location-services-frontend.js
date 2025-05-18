@@ -14,6 +14,13 @@
   let selectedService = null;
   let selectedAddons = [];
   let lastApiResponse = null; // Variable para almacenar la última respuesta de la API
+  // Variables globales para dirección estructurada
+  let structuredAddress = {
+    address_line_one: '',
+    city: '',
+    state: '',
+    zip: ''
+  };
 
   // --- CONFIGURABLE OPTIONS ---
   const DEFAULT_COLUMNS = (window.ewoServiceListingOptions && ewoServiceListingOptions.columns) ? ewoServiceListingOptions.columns : 3;
@@ -352,6 +359,61 @@
       // No renderizar pasos
       return;
     }
+
+    // Paso 4: Enviar oportunidad al hacer click en Continue en addons
+    $('#ewo-continue-to-confirmation').off('click').on('click', function(e) {
+      e.preventDefault();
+      submitOpportunity();
+    });
+
+    function submitOpportunity() {
+      const user = {
+        first_name: $('#ewo-user-first-name').val(),
+        last_name: $('#ewo-user-last-name').val(),
+        email: $('#ewo-user-email').val(),
+        mobile_number: $('#ewo-user-mobile').val()
+      };
+      const serviceId = $('#ewo-selected-service').val();
+      const addons = [];
+      $('.ewo-addon-select:checked').each(function() {
+        addons.push($(this).val());
+      });
+      const lat = $('#ewo-latitude').val();
+      const lng = $('#ewo-longitude').val();
+      // Serviceability results JSON (de la última respuesta de la API de servicios)
+      let serviceabilityResults = null;
+      if (lastApiResponse && lastApiResponse.data && lastApiResponse.data.services) {
+        serviceabilityResults = lastApiResponse.data.services;
+      } else if (lastApiResponse && lastApiResponse.data && lastApiResponse.data.raw_response && lastApiResponse.data.raw_response.serviceableLocations) {
+        serviceabilityResults = lastApiResponse.data.raw_response.serviceableLocations;
+      }
+      // Preparar datos para AJAX
+      const data = {
+        action: 'ewo_create_opportunity',
+        nonce: ewoLocationServices.nonce,
+        user,
+        service_id: serviceId,
+        addons,
+        latitude: lat,
+        longitude: lng,
+        address_line_one: structuredAddress.address_line_one,
+        city: structuredAddress.city,
+        state: structuredAddress.state,
+        zip: structuredAddress.zip,
+        serviceability_results_json: serviceabilityResults ? JSON.stringify(serviceabilityResults) : ''
+      };
+      $.ajax({
+        url: ewoLocationServices.ajax_url,
+        type: 'POST',
+        data: data,
+        success: function(response) {
+          console.log('Opportunity response:', response);
+        },
+        error: function(xhr, status, error) {
+          console.error('Error creating opportunity:', error);
+        }
+      });
+    }
   });
 
   /**
@@ -500,16 +562,11 @@
    */
   function geocodeAddress(callback) {
     const address = $("#ewo-address-input").val().trim();
-
     if (!address) {
       return;
     }
-
-    // Mostrar indicador de carga
     $("#ewo-address-input").prop("disabled", true);
     $("#ewo-search-services").prop("disabled", true);
-
-    // Usar Nominatim para geocodificación
     $.ajax({
       url: "https://nominatim.openstreetmap.org/search",
       type: "GET",
@@ -517,21 +574,17 @@
         q: address,
         format: "json",
         limit: 1,
+        addressdetails: 1
       },
       success: function (data) {
         if (data && data.length > 0) {
           const result = data[0];
           const lat = parseFloat(result.lat);
           const lng = parseFloat(result.lon);
-
-          // Actualizar mapa y marcador
           map.setView([lat, lng], 15);
           marker.setLatLng([lat, lng]);
-
-          // Actualizar campos ocultos
           updateCoordinates(lat, lng);
-
-          // Si hay una función de callback, ejecutarla
+          extractStructuredAddressFromNominatim(result);
           if (typeof callback === "function") {
             callback(lat, lng);
           }
@@ -545,7 +598,6 @@
         alert("Error searching for the address. Please try again.");
       },
       complete: function () {
-        // Restaurar campos
         $("#ewo-address-input").prop("disabled", false);
         $("#ewo-search-services").prop("disabled", false);
       },
@@ -563,11 +615,13 @@
         lat: lat,
         lon: lng,
         format: "json",
+        addressdetails: 1
       },
       success: function (data) {
         if (data && data.display_name) {
           $("#ewo-address-input").val(data.display_name);
         }
+        extractStructuredAddressFromNominatim(data);
       },
       error: function () {
         console.error("Error in reverse geocoding");
@@ -1509,5 +1563,14 @@
     if ((currentPage * perPage) < total) {
       $container.html(`<div class="ewo-load-more-container"><button class="ewo-load-more-btn">Load more</button></div>`);
     }
+  }
+
+  // Extraer dirección estructurada de Nominatim (o Google, Mapbox, etc.)
+  function extractStructuredAddressFromNominatim(data) {
+    if (!data || !data.address) return;
+    structuredAddress.address_line_one = (data.address.road || '') + (data.address.house_number ? ' ' + data.address.house_number : '');
+    structuredAddress.city = data.address.city || data.address.town || data.address.village || '';
+    structuredAddress.state = data.address.state || '';
+    structuredAddress.zip = data.address.postcode || '';
   }
 })(jQuery);
