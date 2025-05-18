@@ -89,7 +89,7 @@ class Ewo_Location_Services_Frontend {
      */
     public function enqueue_scripts() {
         // Scripts principales
-        wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ewo-location-services-frontend.js', array('jquery'), $this->version, false);
+        wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ewo-location-services-frontend.js', array('jquery'), $this->version, true);
 
         // Scripts para Leaflet (si usamos OpenStreetMap)
         wp_enqueue_script($this->plugin_name . '-leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array(), '1.7.1', false);
@@ -151,12 +151,24 @@ class Ewo_Location_Services_Frontend {
             'button_text' => __('Search', 'ewo-location-services'),
         ), $atts, 'ewo_location_form');
 
+        // Si el usuario está logueado, obtener sus datos
+        $user_data = array('logged_in' => false);
+        if (is_user_logged_in()) {
+            $current_user = wp_get_current_user();
+            $user_data = array(
+                'logged_in' => true,
+                'username' => $current_user->user_login,
+                'email' => $current_user->user_email,
+                'first_name' => $current_user->first_name,
+                'last_name' => $current_user->last_name
+            );
+        }
+        // Pasar los datos al JS principal
+        wp_localize_script($this->plugin_name, 'ewoUserData', $user_data);
         // Iniciar buffer de salida
         ob_start();
-
         // Incluir plantilla
         include plugin_dir_path(dirname(__FILE__)) . 'templates/location-form.php';
-
         // Retornar contenido del buffer
         return ob_get_clean();
     }

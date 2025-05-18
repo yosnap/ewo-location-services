@@ -48,13 +48,22 @@
     // Marcar paso activo inicial
     setActiveStep(1);
 
+    // Depuración: mostrar ewoUserData en consola
+    console.log('ewoUserData:', window.ewoUserData);
     // Autocompletar datos si el usuario está logueado
     if (window.ewoUserData && window.ewoUserData.logged_in) {
-      $('#ewo-user-first-name').val(window.ewoUserData.first_name || '').prop('readonly', true);
-      $('#ewo-user-last-name').val(window.ewoUserData.last_name || '').prop('readonly', true);
-      $('#ewo-user-email').val(window.ewoUserData.email || '').prop('readonly', true);
-      $('#ewo-user-username').val(window.ewoUserData.username || '').prop('readonly', true);
+      // Forzar rellenar email y readonly después de un pequeño delay por si el DOM tarda
+      setTimeout(function() {
+        $('#ewo-user-email').val(window.ewoUserData.email || '').prop('readonly', true);
+      }, 100);
+      $('#ewo-user-first-name').val(window.ewoUserData.first_name || '').prop('readonly', false);
+      $('#ewo-user-last-name').val(window.ewoUserData.last_name || '').prop('readonly', false);
+      $('#ewo-user-username, #ewo-user-password, #ewo-user-password-confirm').closest('.ewo-form-group').hide();
       $('#ewo-user-password, #ewo-user-password-confirm').prop('required', false);
+    } else {
+      $('#ewo-user-first-name, #ewo-user-last-name, #ewo-user-email').prop('readonly', false);
+      $('#ewo-user-username, #ewo-user-password, #ewo-user-password-confirm').closest('.ewo-form-group').show();
+      $('#ewo-user-password, #ewo-user-password-confirm').prop('required', true);
     }
 
     // Inicializar el mapa si el contenedor existe
@@ -789,44 +798,39 @@
    */
   function submitUserForm(e) {
     e.preventDefault();
-
-    // Validar contraseñas
-    const password = $("#ewo-user-password").val();
-    const passwordConfirm = $("#ewo-user-password-confirm").val();
-
-    if (password !== passwordConfirm) {
-      showError("#ewo-user-error", "Passwords do not match.");
-      return;
+    // Validar contraseñas solo si el usuario no está logueado
+    if (!(window.ewoUserData && window.ewoUserData.logged_in)) {
+      const password = $("#ewo-user-password").val();
+      const passwordConfirm = $("#ewo-user-password-confirm").val();
+      if (password !== passwordConfirm) {
+        showError("#ewo-user-error", "Passwords do not match.");
+        return;
+      }
     }
-
     // Recopilar addons seleccionados
     selectedAddons = [];
     $(".ewo-addon-select:checked").each(function () {
       selectedAddons.push($(this).val());
     });
-
-    // Deshabilitar el botón para evitar envíos duplicados
     const $submitButton = $("#ewo-submit-user");
     const originalButtonText = $submitButton.text();
     $submitButton.prop("disabled", true);
     $submitButton.text("Processing...");
-
-    // Ocultar mensajes de error previos
     $("#ewo-user-error").hide();
-
     // Preparar datos del formulario
     const formData = {
       action: "ewo_submit_user",
       nonce: ewoLocationServices.nonce,
-      username: $("#ewo-user-username").val(),
-      email: $("#ewo-user-email").val(),
-      password: password,
       first_name: $("#ewo-user-first-name").val(),
       last_name: $("#ewo-user-last-name").val(),
+      email: $("#ewo-user-email").val(),
       service_id: $("#ewo-selected-service").val(),
       addons: selectedAddons,
     };
-
+    if (!(window.ewoUserData && window.ewoUserData.logged_in)) {
+      formData.username = $("#ewo-user-username").val();
+      formData.password = $("#ewo-user-password").val();
+    }
     // Enviar solicitud AJAX
     $.ajax({
       url: ewoLocationServices.ajax_url,

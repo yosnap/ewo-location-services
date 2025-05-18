@@ -160,20 +160,16 @@ if (!defined('ABSPATH')) {
                 <input type="email" id="ewo-user-email" name="email" class="ewo-input" required>
             </div>
             
+            <?php if (!is_user_logged_in()): ?>
             <div class="ewo-form-group">
                 <label for="ewo-user-username"><?php _e('Username', 'ewo-location-services'); ?></label>
                 <input type="text" id="ewo-user-username" name="username" class="ewo-input" required>
             </div>
-            
             <div class="ewo-form-group">
                 <label for="ewo-user-password"><?php _e('Password', 'ewo-location-services'); ?></label>
                 <input type="password" id="ewo-user-password" name="password" class="ewo-input" required>
             </div>
-            
-            <div class="ewo-form-group">
-                <label for="ewo-user-password-confirm"><?php _e('Confirm Password', 'ewo-location-services'); ?></label>
-                <input type="password" id="ewo-user-password-confirm" name="password_confirm" class="ewo-input" required>
-            </div>
+            <?php endif; ?>
             
             <input type="hidden" id="ewo-selected-service" name="service_id" value="">
             <div id="ewo-selected-addons-container"></div>
