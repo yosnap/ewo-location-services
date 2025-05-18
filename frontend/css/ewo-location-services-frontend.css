@@ -537,3 +537,119 @@
     padding: 1rem;
   }
 }
+
+/* --- Form Steps Progress Bar --- */
+.ewo-form-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0 2.5rem 0;
+  counter-reset: ewo-step;
+}
+.ewo-form-steps li {
+  position: relative;
+  flex: 1 1 0;
+  text-align: center;
+  font-weight: 500;
+  color: #bbb;
+  transition: color 0.2s;
+}
+.ewo-form-steps-progress-bar .ewo-step {
+  padding-bottom: 8px;
+}
+.ewo-form-steps-progress-bar .ewo-step:before {
+  content: counter(ewo-step);
+  counter-increment: ewo-step;
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  border-radius: 50%;
+  background: #eee;
+  color: #bbb;
+  font-weight: bold;
+  margin-bottom: 6px;
+  font-size: 1.1rem;
+  margin-right: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.ewo-form-steps-progress-bar .ewo-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  right: -50%;
+  width: 100%;
+  height: 4px;
+  background: #eee;
+  z-index: 0;
+}
+.ewo-form-steps-progress-bar .ewo-step.active,
+.ewo-form-steps-progress-bar .ewo-step.active:before {
+  color: #c2185b;
+  background: #ffe3ef;
+}
+.ewo-form-steps-progress-bar .ewo-step.active {
+  color: #c2185b;
+}
+.ewo-form-steps-progress-bar .ewo-step.active:before {
+  background: #c2185b;
+  color: #fff;
+}
+
+/* --- Form Steps Circles --- */
+.ewo-form-steps-circles .ewo-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 18px;
+  color: #bbb;
+}
+.ewo-form-steps-circles .ewo-step:before {
+  content: counter(ewo-step);
+  counter-increment: ewo-step;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #eee;
+  color: #bbb;
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+  transition: background 0.2s, color 0.2s;
+}
+.ewo-form-steps-circles .ewo-step.active,
+.ewo-form-steps-circles .ewo-step.active:before {
+  color: #c2185b;
+  background: #ffe3ef;
+}
+.ewo-form-steps-circles .ewo-step.active:before {
+  background: #c2185b;
+  color: #fff;
+}
+.ewo-form-steps-circles .ewo-step {
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .ewo-form-steps {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .ewo-form-steps li {
+    margin-bottom: 12px;
+    text-align: left;
+  }
+  .ewo-form-steps-progress-bar .ewo-step:not(:last-child)::after {
+    display: none;
+  }
+  .ewo-form-steps-circles .ewo-step {
+    margin: 0 0 18px 0;
+  }
+}

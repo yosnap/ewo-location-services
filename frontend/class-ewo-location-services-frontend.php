@@ -99,7 +99,7 @@ class Ewo_Location_Services_Frontend {
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ewo_location_services_nonce')
         ));
-        // Pasar opciones del admin al JS
+        // Pasar opciones del admin al JS (transformadas)
         $listing_options = get_option('ewo_service_listing_options', array());
         wp_localize_script($this->plugin_name, 'ewoServiceListingOptions', array(
             'columns' => isset($listing_options['grid_columns']) ? intval($listing_options['grid_columns']) : 3,
@@ -109,6 +109,9 @@ class Ewo_Location_Services_Frontend {
             'listing_mode' => isset($listing_options['listing_mode']) ? $listing_options['listing_mode'] : 'grid',
             'show_filters' => isset($listing_options['show_filters']) ? $listing_options['show_filters'] : 'yes',
             'card_color_usage' => isset($listing_options['card_color_usage']) ? $listing_options['card_color_usage'] : 'none',
+            'form_steps_style' => isset($listing_options['form_steps_style']) ? $listing_options['form_steps_style'] : 'progress_bar',
+            'step_active_color' => isset($listing_options['step_active_color']) ? $listing_options['step_active_color'] : '#c2185b',
+            'step_inactive_color' => isset($listing_options['step_inactive_color']) ? $listing_options['step_inactive_color'] : '#bbb',
         ));
     }
 

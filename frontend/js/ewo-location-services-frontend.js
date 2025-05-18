@@ -25,13 +25,11 @@
   const CARD_COLOR_USAGE = (window.ewoServiceListingOptions && ewoServiceListingOptions.card_color_usage) ? ewoServiceListingOptions.card_color_usage : 'none';
 
   // --- STATE ---
-  let currentView = DEFAULT_LISTING_MODE; // 'grid' or 'list'
+  let columns = (window.ewoServiceListingOptions && window.ewoServiceListingOptions.columns) ? parseInt(window.ewoServiceListingOptions.columns, 10) : 3;
+  let perPage = (window.ewoServiceListingOptions && window.ewoServiceListingOptions.per_page) ? parseInt(window.ewoServiceListingOptions.per_page, 10) : 8;
+  let currentView = (window.ewoServiceListingOptions && window.ewoServiceListingOptions.listing_mode) ? window.ewoServiceListingOptions.listing_mode : 'grid';
   let currentPage = 1;
   let servicesData = [];
-  let columns = DEFAULT_COLUMNS;
-  let perPage = DEFAULT_PER_PAGE;
-
-  // --- FILTERING, ORDERING, AND PRELOADER ---
   let filteredServices = [];
   let isLoading = false;
   let searchQuery = '';
@@ -40,6 +38,25 @@
 
   // Inicialización cuando el DOM está listo
   $(document).ready(function () {
+    // Cambiar estilo de pasos según config
+    $('#ewo-form-steps').removeClass('ewo-form-steps-progress-bar ewo-form-steps-circles');
+    if (window.ewoServiceListingOptions && window.ewoServiceListingOptions.form_steps_style === 'circles') {
+      $('#ewo-form-steps').addClass('ewo-form-steps-circles');
+    } else {
+      $('#ewo-form-steps').addClass('ewo-form-steps-progress-bar');
+    }
+    // Marcar paso activo inicial
+    setActiveStep(1);
+
+    // Autocompletar datos si el usuario está logueado
+    if (window.ewoUserData && window.ewoUserData.logged_in) {
+      $('#ewo-user-first-name').val(window.ewoUserData.first_name || '').prop('readonly', true);
+      $('#ewo-user-last-name').val(window.ewoUserData.last_name || '').prop('readonly', true);
+      $('#ewo-user-email').val(window.ewoUserData.email || '').prop('readonly', true);
+      $('#ewo-user-username').val(window.ewoUserData.username || '').prop('readonly', true);
+      $('#ewo-user-password, #ewo-user-password-confirm').prop('required', false);
+    }
+
     // Inicializar el mapa si el contenedor existe
     if ($("#ewo-map-container").length) {
       initMap();
@@ -79,6 +96,45 @@
         closeDebugModal();
       }
     });
+
+    // Eventos para filtros, buscador, columnas, paginación, load more y cambio de vista
+    $(document).on('input', '#ewo-service-search', function () {
+      searchQuery = $(this).val();
+      applyFiltersAndOrdering();
+    });
+    $(document).on('change', '#ewo-network-type-filter', function () {
+      networkTypeFilter = $(this).val();
+      applyFiltersAndOrdering();
+    });
+    $(document).on('change', '#ewo-service-ordering', function () {
+      ordering = $(this).val();
+      applyFiltersAndOrdering();
+    });
+    $(document).on('change', '#ewo-columns-select', function () {
+      columns = parseInt($(this).val(), 10);
+      renderServices();
+    });
+    // Evento para perPage
+    $(document).on('change', '#ewo-per-page-select', function () {
+      perPage = parseInt($(this).val(), 10);
+      currentPage = 1;
+      renderServices();
+    });
+    $(document).on('click', '.ewo-toggle-btn', function () {
+      currentView = $(this).data('view');
+      renderServices();
+    });
+    $(document).on('click', '.ewo-page-btn', function () {
+      const page = parseInt($(this).data('page'), 10);
+      if (!isNaN(page)) {
+        currentPage = page;
+        renderServices();
+      }
+    });
+    $(document).on('click', '.ewo-load-more-btn', function () {
+      currentPage++;
+      renderServices();
+    });
   });
 
   /**
@@ -86,8 +142,8 @@
    */
   function initMap() {
     // Coordenadas iniciales (centro del mapa)
-    const initialLat = 40.7128;
-    const initialLng = -74.006;
+    const initialLat = 37.806479687628936;
+    const initialLng = -89.07903653069094;
 
     // Inicializar el mapa
     map = L.map("ewo-map-container").setView([initialLat, initialLng], 13);
@@ -435,6 +491,7 @@
     filteredServices = services;
     currentPage = 1;
     applyFiltersAndOrdering();
+    showServicesSection();
   }
 
   /**
@@ -588,7 +645,7 @@
   function showLocationSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-location-form-container").addClass("active");
-    // Invalidar tamaño del mapa al mostrarlo
+    setActiveStep(1);
     if (map) {
       setTimeout(function () {
         map.invalidateSize();
@@ -598,22 +655,98 @@
 
   function showServicesSection() {
     $(".ewo-section").removeClass("active");
-    $("#ewo-services-container").addClass("active");
+    $("#ewo-available-services-section").addClass("active");
+    setActiveStep(2);
   }
 
   function showAddonsSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-addons-container").addClass("active");
+    setActiveStep(3);
   }
 
   function showUserSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-user-container").addClass("active");
+    setActiveStep(4);
   }
 
   function showConfirmationSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-confirmation-container").addClass("active");
+    setActiveStep(5);
+  }
+
+  // Renderizar pasos personalizados
+  function renderCustomSteps() {
+    const $stepsOl = $('#ewo-form-steps');
+    const $stepsProgress = $('#ewo-form-steps-progress');
+    const opts = window.ewoServiceListingOptions || {};
+    const size = opts.step_size ? parseInt(opts.step_size, 10) : 32;
+    const showLabels = opts.show_step_labels === 'yes';
+    const iconType = opts.step_icon_type || 'dashicons';
+    const style = opts.form_steps_style || 'progress_bar';
+    const activeColor = opts.step_active_color || '#c2185b';
+    const inactiveColor = opts.step_inactive_color || '#e5e1e1';
+    const totalSteps = $stepsOl.find('.ewo-step').length;
+    let activeStep = window.ewoCurrentStep || 1;
+
+    if (style === 'circles') {
+      $stepsOl.show();
+      $stepsProgress.hide();
+      // ... render de círculos en <ol> como antes ...
+    } else if (style === 'progress_bar') {
+      $stepsOl.hide();
+      $stepsProgress.show();
+      // Renderizar barra de progreso
+      let iconsHtml = '<div class="ewo-progress-icons" style="display:flex;justify-content:space-between;margin-bottom:6px;">';
+      for (let i = 1; i <= totalSteps; i++) {
+        let iconHtml = '';
+        let iconClass = (i === activeStep) ? 'active' : '';
+        if (iconType === 'dashicons') {
+          const icon = opts['step_icon_' + i] || 'location';
+          iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;display:inline-block;"></span>';
+        } else if (iconType === 'svg') {
+          const svgUrl = opts['step_svg_' + i] || '';
+          if (svgUrl) {
+            iconHtml = '<img src="' + svgUrl + '" class="' + iconClass + '" style="width:' + (size * 0.7) + 'px;height:' + (size * 0.7) + 'px;display:block;margin:auto;" alt="Step icon">';
+          } else {
+            const icon = opts['step_icon_' + i] || 'location';
+            iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;display:inline-block;"></span>';
+          }
+        } else if (iconType === 'none') {
+          iconHtml = '<span class="ewo-step-number ' + iconClass + '" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;">' + i + '</span>';
+        }
+        iconsHtml += '<span class="ewo-progress-icon ' + iconClass + '" style="flex:1;text-align:center;">' + iconHtml + '</span>';
+      }
+      iconsHtml += '</div>';
+      // Labels
+      let labelsHtml = '<div class="ewo-progress-labels" style="display:flex;justify-content:space-between;margin-bottom:6px;">';
+      for (let i = 1; i <= totalSteps; i++) {
+        const label = opts['step_label_' + i] || $stepsOl.find('.ewo-step').eq(i-1).text().replace(/^\d+\.?\s*/, '');
+        const activeClass = (i === activeStep) ? 'active' : '';
+        labelsHtml += '<span class="ewo-progress-label ' + activeClass + '" style="flex:1;text-align:center;font-size:0.98em;padding:0 4px;min-width:60px;white-space:nowrap;">' + label + '</span>';
+      }
+      labelsHtml += '</div>';
+      // Barra de fondo y relleno
+      let barHtml = '<div class="ewo-progress-bar-bg" style="position:relative;height:10px;border-radius:5px;background:var(--ewo-inactive-bg,#eee);overflow:hidden;">';
+      const percent = (activeStep/totalSteps)*100;
+      barHtml += '<div class="ewo-progress-bar-fill" style="position:absolute;left:0;top:0;height:100%;width:' + percent + '%;background:var(--ewo-active-color,#c2185b);transition:width 0.5s cubic-bezier(.4,0,.2,1);"></div>';
+      barHtml += '</div>';
+      // Renderizar en el div
+      $stepsProgress.html(iconsHtml + barHtml + labelsHtml);
+    }
+    $('#ewo-form-steps, #ewo-form-steps-progress').addClass('ewo-steps-ready');
+  }
+
+  // Llama a renderCustomSteps al cargar y cada vez que cambie el paso
+  renderCustomSteps();
+
+  function setActiveStep(step) {
+    window.ewoCurrentStep = step;
+    $('#ewo-form-steps .ewo-step').removeClass('active');
+    $('#ewo-form-steps .ewo-step[data-step="' + step + '"]').addClass('active');
+    renderCustomSteps();
   }
 
   /**
@@ -939,28 +1072,9 @@
   function renderServiceControls(total) {
     const $container = $('#ewo-services-controls');
     $container.empty();
-    // Count
+    // Contador
     $container.append(`<div class="ewo-services-count">${total} service${total === 1 ? '' : 's'} found</div>`);
-    // View toggle
-    $container.append(`
-      <div class="ewo-view-toggle">
-        <button class="ewo-toggle-btn" data-view="grid" ${currentView === 'grid' ? 'disabled' : ''}>Grid</button>
-        <button class="ewo-toggle-btn" data-view="list" ${currentView === 'list' ? 'disabled' : ''}>List</button>
-      </div>
-    `);
-    // Columns selector (only for grid)
-    if (currentView === 'grid') {
-      $container.append(`
-        <div class="ewo-columns-select">
-          Columns: <select id="ewo-columns-select">
-            <option value="2" ${columns === 2 ? 'selected' : ''}>2</option>
-            <option value="3" ${columns === 3 ? 'selected' : ''}>3</option>
-            <option value="4" ${columns === 4 ? 'selected' : ''}>4</option>
-          </select>
-        </div>
-      `);
-    }
-    // Filtros (solo si está activado)
+    // Filtros (si está activado)
     if (SHOW_FILTERS) {
       $container.append(`
         <div class="ewo-filters">
@@ -979,39 +1093,78 @@
         </div>
       `);
     }
+    // Selector de columnas (solo en grid)
+    if (currentView === 'grid') {
+      const colOptions = [2, 3, 4];
+      let colSelect = `<div class="ewo-columns-select">Columns: <select id="ewo-columns-select">`;
+      colOptions.forEach(opt => {
+        colSelect += `<option value="${opt}" ${columns === opt ? 'selected' : ''}>${opt}</option>`;
+      });
+      colSelect += `</select></div>`;
+      $container.append(colSelect);
+    }
+    // Selector de ítems por página
+    const perPageOptions = [4, 8, 12, 16];
+    let perPageSelect = `<div class="ewo-per-page-select">Items per page: <select id="ewo-per-page-select">`;
+    perPageOptions.forEach(opt => {
+      perPageSelect += `<option value="${opt}" ${perPage === opt ? 'selected' : ''}>${opt}</option>`;
+    });
+    perPageSelect += `</select></div>`;
+    $container.append(perPageSelect);
+    // Toggle de vista
+    $container.append(`
+      <div class="ewo-view-toggle">
+        <button class="ewo-toggle-btn" data-view="grid" ${currentView === 'grid' ? 'disabled' : ''}>Grid</button>
+        <button class="ewo-toggle-btn" data-view="list" ${currentView === 'list' ? 'disabled' : ''}>List</button>
+      </div>
+    `);
   }
 
-  function renderPagination(total) {
-    const $container = $('#ewo-services-pagination');
-    $container.empty();
-    if (!SHOW_PAGINATION || LOAD_MORE) return;
-    const totalPages = Math.ceil(total / perPage);
-    if (totalPages <= 1) return;
-    let html = '<div class="ewo-pagination">';
-    if (currentPage > 1) {
-      html += `<button class="ewo-page-btn" data-page="${currentPage - 1}">Previous</button>`;
-    }
-    for (let i = 1; i <= totalPages; i++) {
-      html += `<button class="ewo-page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
-    }
-    if (currentPage < totalPages) {
-      html += `<button class="ewo-page-btn" data-page="${currentPage + 1}">Next</button>`;
-    }
-    html += '</div>';
-    $container.html(html);
+  function applyFiltersAndOrdering() {
+    setPreloader(true);
+    setTimeout(() => { // Simula async para UX
+      let result = [...servicesData];
+      // Filtro de búsqueda
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter(s =>
+          (s.coverage_code && s.coverage_code.toLowerCase().includes(q)) ||
+          (s.network_type && s.network_type.toLowerCase().includes(q)) ||
+          (s.coverage_confidence && s.coverage_confidence.status_text_full && s.coverage_confidence.status_text_full.toLowerCase().includes(q))
+        );
+      }
+      // Filtro por tipo de red
+      if (networkTypeFilter) {
+        result = result.filter(s => s.network_type === networkTypeFilter);
+      }
+      // Ordenación
+      if (ordering === 'speed-desc') {
+        result.sort((a, b) => (b.max_download_speed_mbps || 0) - (a.max_download_speed_mbps || 0));
+      } else if (ordering === 'speed-asc') {
+        result.sort((a, b) => (a.max_download_speed_mbps || 0) - (b.max_download_speed_mbps || 0));
+      } else if (ordering === 'coverage') {
+        result.sort((a, b) => {
+          if (!a.coverage_code) return 1;
+          if (!b.coverage_code) return -1;
+          return a.coverage_code.localeCompare(b.coverage_code);
+        });
+      }
+      filteredServices = result;
+      currentPage = 1;
+      renderServices();
+      setPreloader(false);
+    }, 200); // Simula carga
   }
 
-  function renderLoadMore(total) {
-    const $container = $('#ewo-services-pagination');
-    $container.empty();
-    if (!LOAD_MORE) return;
-    const totalPages = Math.ceil(total / perPage);
-    if ((currentPage * perPage) < total) {
-      $container.html(`<div class="ewo-load-more-container"><button class="ewo-load-more-btn">Load more</button></div>`);
+  function setPreloader(visible) {
+    isLoading = visible;
+    if (visible) {
+      $('#ewo-loading-services').show();
+    } else {
+      $('#ewo-loading-services').hide();
     }
   }
 
-  // --- MAIN RENDER FUNCTION (MODIFIED) ---
   function renderServices() {
     const $servicesList = $("#ewo-services-list");
     $servicesList.empty();
@@ -1084,86 +1237,33 @@
     });
   }
 
-  // --- EVENT HANDLERS ---
-  $(document).on('click', '.ewo-toggle-btn', function () {
-    currentView = $(this).data('view');
-    currentPage = 1;
-    renderServices();
-  });
-  $(document).on('change', '#ewo-columns-select', function () {
-    columns = parseInt($(this).val(), 10);
-    renderServices();
-  });
-  $(document).on('click', '.ewo-page-btn', function () {
-    const page = parseInt($(this).data('page'), 10);
-    if (!isNaN(page)) {
-      currentPage = page;
-      renderServices();
+  function renderPagination(total) {
+    const $container = $('#ewo-services-pagination');
+    $container.empty();
+    if (!SHOW_PAGINATION || LOAD_MORE) return;
+    const totalPages = Math.ceil(total / perPage);
+    if (totalPages <= 1) return;
+    let html = '<div class="ewo-pagination">';
+    if (currentPage > 1) {
+      html += `<button class="ewo-page-btn" data-page="${currentPage - 1}">Previous</button>`;
     }
-  });
-  $(document).on('click', '.ewo-load-more-btn', function () {
-    currentPage++;
-    renderServices();
-  });
-
-  // --- EVENT HANDLERS FOR FILTERS/ORDERING ---
-  $(document).on('input', '#ewo-service-search', function () {
-    searchQuery = $(this).val();
-    applyFiltersAndOrdering();
-  });
-  $(document).on('change', '#ewo-network-type-filter', function () {
-    networkTypeFilter = $(this).val();
-    applyFiltersAndOrdering();
-  });
-  $(document).on('change', '#ewo-service-ordering', function () {
-    ordering = $(this).val();
-    applyFiltersAndOrdering();
-  });
-
-  // Show/hide preloader
-  function setPreloader(visible) {
-    isLoading = visible;
-    if (visible) {
-      $('#ewo-loading-services').show();
-    } else {
-      $('#ewo-loading-services').hide();
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="ewo-page-btn${i === currentPage ? ' active' : ''}" data-page="${i}">${i}</button>`;
     }
+    if (currentPage < totalPages) {
+      html += `<button class="ewo-page-btn" data-page="${currentPage + 1}">Next</button>`;
+    }
+    html += '</div>';
+    $container.html(html);
   }
 
-  // Apply filters and ordering to servicesData
-  function applyFiltersAndOrdering() {
-    setPreloader(true);
-    setTimeout(() => { // Simulate async for UX
-      let result = [...servicesData];
-      // Search filter
-      if (searchQuery) {
-        const q = searchQuery.toLowerCase();
-        result = result.filter(s =>
-          (s.coverage_code && s.coverage_code.toLowerCase().includes(q)) ||
-          (s.network_type && s.network_type.toLowerCase().includes(q)) ||
-          (s.coverage_confidence && s.coverage_confidence.status_text_full && s.coverage_confidence.status_text_full.toLowerCase().includes(q))
-        );
-      }
-      // Network type filter
-      if (networkTypeFilter) {
-        result = result.filter(s => s.network_type === networkTypeFilter);
-      }
-      // Ordering
-      if (ordering === 'speed-desc') {
-        result.sort((a, b) => (b.max_download_speed_mbps || 0) - (a.max_download_speed_mbps || 0));
-      } else if (ordering === 'speed-asc') {
-        result.sort((a, b) => (a.max_download_speed_mbps || 0) - (b.max_download_speed_mbps || 0));
-      } else if (ordering === 'coverage') {
-        result.sort((a, b) => {
-          if (!a.coverage_code) return 1;
-          if (!b.coverage_code) return -1;
-          return a.coverage_code.localeCompare(b.coverage_code);
-        });
-      }
-      filteredServices = result;
-      currentPage = 1;
-      renderServices();
-      setPreloader(false);
-    }, 200); // Simulate loading
+  function renderLoadMore(total) {
+    const $container = $('#ewo-services-pagination');
+    $container.empty();
+    if (!LOAD_MORE) return;
+    const totalPages = Math.ceil(total / perPage);
+    if ((currentPage * perPage) < total) {
+      $container.html(`<div class="ewo-load-more-container"><button class="ewo-load-more-btn">Load more</button></div>`);
+    }
   }
 })(jQuery);

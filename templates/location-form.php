@@ -13,6 +13,16 @@ if (!defined('ABSPATH')) {
 ?>
 
 <div id="ewo-location-services-container" class="ewo-location-services">
+    <!-- ===================== Form Steps Progress ===================== -->
+    <ol id="ewo-form-steps" class="ewo-form-steps ewo-form-steps-progress-bar">
+        <li class="ewo-step active" data-step="1">1. Location</li>
+        <li class="ewo-step" data-step="2">2. Service</li>
+        <li class="ewo-step" data-step="3">3. Addons</li>
+        <li class="ewo-step" data-step="4">4. Your Information</li>
+        <li class="ewo-step" data-step="5">5. Confirmation</li>
+    </ol>
+    <div id="ewo-form-steps-progress" style="display:none;"></div>
+
     <!-- Formulario de ubicación -->
     <div id="ewo-location-form-container" class="ewo-section active">
         <h2><?php echo esc_html($atts['title']); ?></h2>
@@ -40,15 +50,17 @@ if (!defined('ABSPATH')) {
     </div>
     
     <!-- ===================== Available Services Section ===================== -->
-    <div id="ewo-available-services-section" class="ewo-section active" style="margin-bottom: 30px;">
+    <div id="ewo-available-services-section" class="ewo-section">
         <h2>Available Services</h2>
+        <!-- Change location button -->
+        <button id="ewo-change-location-btn" type="button" style="margin-bottom: 1rem;">Change location</button>
         <!-- Controls: filters, ordering, view toggle, columns, pagination -->
         <div id="ewo-services-controls"></div>
         <!-- Preloader -->
         <div id="ewo-loading-services" style="display:none; margin: 2rem 0; text-align:center;">
             <span class="ewo-spinner"></span> Loading services...
         </div>
-        <!-- Services List/Grid -->
+        <!-- Services list -->
         <div id="ewo-services-list"></div>
         <!-- Pagination -->
         <div id="ewo-services-pagination"></div>

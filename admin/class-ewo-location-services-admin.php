@@ -192,14 +192,79 @@ class Ewo_Location_Services_Admin {
         ?>
         <div class="wrap">
             <h1>Service Listing Settings</h1>
+            <div class="ewo-tabs" style="margin-bottom: 2rem;">
+                <button class="ewo-tab-btn active" data-tab="display">Service Listing Display</button>
+                <button class="ewo-tab-btn" data-tab="steps">Form Steps Customization</button>
+            </div>
             <form method="post" action="options.php">
                 <?php
                 settings_fields('ewo_service_listing_options_group');
+                echo '<div id="ewo-tab-content-display" class="ewo-tab-content active">';
                 do_settings_sections('ewo_service_listing_options');
+                echo '</div>';
+                echo '<div id="ewo-tab-content-steps" class="ewo-tab-content">';
+                do_settings_sections('ewo_form_steps_customization');
+                echo '</div>';
                 submit_button();
                 ?>
             </form>
         </div>
+        <style>
+        .ewo-tabs { display: flex; gap: 1rem; }
+        .ewo-tab-btn { background: #f5f5f5; border: none; border-radius: 6px 6px 0 0; padding: 0.7em 2em; font-size: 1.1rem; cursor: pointer; color: #555; transition: background 0.2s, color 0.2s; }
+        .ewo-tab-btn.active { background: #fff; color: #c2185b; border-bottom: 2px solid #c2185b; font-weight: bold; }
+        .ewo-tab-content { display: none; background: #fff; border-radius: 0 0 8px 8px; padding: 2rem 2rem 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.04); }
+        .ewo-tab-content.active { display: block; }
+        </style>
+        <script>
+        jQuery(function($){
+            // --- PERSISTENCIA DE PESTAÑA ACTIVA ---
+            function setActiveTab(tab) {
+                $('.ewo-tab-btn').removeClass('active');
+                $('.ewo-tab-content').removeClass('active');
+                if(tab === 'steps') {
+                    $('.ewo-tab-btn[data-tab="steps"]').addClass('active');
+                    $('#ewo-tab-content-steps').addClass('active');
+                } else {
+                    $('.ewo-tab-btn[data-tab="display"]').addClass('active');
+                    $('#ewo-tab-content-display').addClass('active');
+                }
+                localStorage.setItem('ewo_service_listing_tab', tab);
+            }
+            // Al hacer clic en pestaña
+            $('.ewo-tab-btn').on('click', function(){
+                setActiveTab($(this).data('tab'));
+            });
+            // Al cargar, restaurar pestaña activa
+            var lastTab = localStorage.getItem('ewo_service_listing_tab') || 'display';
+            setActiveTab(lastTab);
+
+            // --- ALTERNANCIA DE CAMPOS DE ICONOS ---
+            function toggleIconFields() {
+                var type = $('#ewo-step-icon-type').val();
+                $('.ewo-step-icon-dashicon-row').closest('tr').toggle(type === 'dashicons');
+                $('.ewo-step-icon-svg-row').closest('tr').toggle(type === 'svg');
+            }
+            $('#ewo-step-icon-type').on('change', toggleIconFields);
+            toggleIconFields(); // Ejecutar SIEMPRE al cargar
+            // Media uploader para SVG
+            $('.ewo-upload-svg').on('click', function(e){
+                e.preventDefault();
+                var target = $(this).data('target');
+                var frame = wp.media({
+                    title: 'Select or Upload SVG',
+                    button: { text: 'Use this SVG' },
+                    library: { type: 'image/svg+xml' },
+                    multiple: false
+                });
+                frame.on('select', function(){
+                    var url = frame.state().get('selection').first().toJSON().url;
+                    $(target).val(url);
+                });
+                frame.open();
+            });
+        });
+        </script>
         <?php
     }
 
@@ -214,6 +279,9 @@ class Ewo_Location_Services_Admin {
             'ewo_location_services_options', 
             'ewo_location_services_options'
         );
+
+        // Registrar la configuración para Service Listing Settings
+        register_setting('ewo_service_listing_options_group', 'ewo_service_listing_options');
 
         // Sección API General
         add_settings_section(
@@ -471,11 +539,7 @@ class Ewo_Location_Services_Admin {
             'ewo_location_services_opportunity'
         );
 
-        // Register new settings for service listing
-        register_setting(
-            'ewo_service_listing_options_group',
-            'ewo_service_listing_options'
-        );
+        // Sección principal de opciones de listado
         add_settings_section(
             'ewo_service_listing_main',
             __('Service Listing Display Options', 'ewo-location-services'),
@@ -587,6 +651,199 @@ class Ewo_Location_Services_Admin {
             },
             'ewo_service_listing_options',
             'ewo_service_listing_main'
+        );
+        // Form Steps Style
+        $opts = get_option('ewo_service_listing_options');
+        add_settings_field(
+            'form_steps_style',
+            __('Form Steps Style', 'ewo-location-services'),
+            function() use ($opts) {
+                $value = isset($opts['form_steps_style']) ? $opts['form_steps_style'] : 'progress_bar';
+                echo '<select name="ewo_service_listing_options[form_steps_style]">';
+                echo '<option value="progress_bar"' . selected($value, 'progress_bar', false) . '>Progress Bar</option>';
+                echo '<option value="circles"' . selected($value, 'circles', false) . '>Circles</option>';
+                echo '</select>';
+            },
+            'ewo_service_listing_options',
+            'ewo_service_listing_main'
+        );
+        // Active Step Color
+        add_settings_field(
+            'step_active_color',
+            __('Active Step Color', 'ewo-location-services'),
+            function() use ($opts) {
+                $val = isset($opts['step_active_color']) ? $opts['step_active_color'] : '#c2185b';
+                echo '<input type="color" name="ewo_service_listing_options[step_active_color]" value="' . esc_attr($val) . '">';
+            },
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
+        );
+        // Inactive Step Color
+        add_settings_field(
+            'step_inactive_color',
+            __('Inactive Step Color', 'ewo-location-services'),
+            function() use ($opts) {
+                $val = isset($opts['step_inactive_color']) ? $opts['step_inactive_color'] : '#bbb';
+                echo '<input type="color" name="ewo_service_listing_options[step_inactive_color]" value="' . esc_attr($val) . '">';
+            },
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
+        );
+        // Active Step Background
+        add_settings_field(
+            'step_active_bg',
+            __('Active Step Background', 'ewo-location-services'),
+            function() use ($opts) {
+                $val = isset($opts['step_active_bg']) ? $opts['step_active_bg'] : '#ffe3ef';
+                echo '<input type="color" name="ewo_service_listing_options[step_active_bg]" value="' . esc_attr($val) . '">';
+            },
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
+        );
+        // Inactive Step Background
+        add_settings_field(
+            'step_inactive_bg',
+            __('Inactive Step Background', 'ewo-location-services'),
+            function() use ($opts) {
+                $val = isset($opts['step_inactive_bg']) ? $opts['step_inactive_bg'] : '#eee';
+                echo '<input type="color" name="ewo_service_listing_options[step_inactive_bg]" value="' . esc_attr($val) . '">';
+            },
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
+        );
+        // Step Size
+        add_settings_field(
+            'step_size',
+            __('Step Size (px)', 'ewo-location-services'),
+            function() use ($opts) {
+                $val = isset($opts['step_size']) ? intval($opts['step_size']) : 32;
+                echo '<input type="number" min="20" max="80" name="ewo_service_listing_options[step_size]" value="' . esc_attr($val) . '" style="width:60px;">';
+            },
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
+        );
+        // Show Step Labels
+        add_settings_field(
+            'show_step_labels',
+            __('Show Step Labels', 'ewo-location-services'),
+            function() use ($opts) {
+                $val = isset($opts['show_step_labels']) ? $opts['show_step_labels'] : 'yes';
+                echo '<select name="ewo_service_listing_options[show_step_labels]">';
+                echo '<option value="yes"' . selected($val, 'yes', false) . '>Yes</option>';
+                echo '<option value="no"' . selected($val, 'no', false) . '>No</option>';
+                echo '</select>';
+            },
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
+        );
+        // Custom Step Labels
+        $default_labels = ['Location','Service','Addons','Your Information','Confirmation'];
+        for ($i=1; $i<=5; $i++) {
+            add_settings_field(
+                'step_label_' . $i,
+                sprintf(__('Step %d Label', 'ewo-location-services'), $i),
+                function() use ($opts, $i, $default_labels) {
+                    $val = isset($opts['step_label_'.$i]) ? $opts['step_label_'.$i] : $default_labels[$i-1];
+                    echo '<input type="text" name="ewo_service_listing_options[step_label_'.$i.']" value="' . esc_attr($val) . '" style="width:220px;">';
+                },
+                'ewo_form_steps_customization',
+                'ewo_form_steps_customization'
+            );
+        }
+        // Icon Type selector
+        add_settings_field(
+            'step_icon_type',
+            __('Icon Type', 'ewo-location-services'),
+            function() use ($opts) {
+                $val = isset($opts['step_icon_type']) ? $opts['step_icon_type'] : 'dashicons';
+                echo '<select id="ewo-step-icon-type" name="ewo_service_listing_options[step_icon_type]">';
+                echo '<option value="none"' . selected($val, 'none', false) . '>None</option>';
+                echo '<option value="dashicons"' . selected($val, 'dashicons', false) . '>Dashicons</option>';
+                echo '<option value="svg"' . selected($val, 'svg', false) . '>SVG</option>';
+                echo '</select>';
+            },
+            'ewo_form_steps_customization',
+            'ewo_form_steps_customization'
+        );
+        // Dashicon for each step (only if dashicons selected)
+        for ($i=1; $i<=5; $i++) {
+            add_settings_field(
+                'step_icon_' . $i,
+                sprintf(__('Step %d Dashicon', 'ewo-location-services'), $i),
+                function() use ($opts, $i) {
+                    $val = isset($opts['step_icon_'.$i]) ? $opts['step_icon_'.$i] : 'location';
+                    echo '<div class="ewo-step-icon-dashicon-row" data-icon-type="dashicons">';
+                    echo '<input type="text" name="ewo_service_listing_options[step_icon_'.$i.']" value="' . esc_attr($val) . '" style="width:120px;">';
+                    echo ' <span class="dashicons dashicons-' . esc_attr($val) . '"></span>';
+                    echo '</div>';
+                },
+                'ewo_form_steps_customization',
+                'ewo_form_steps_customization'
+            );
+        }
+        // SVG upload for each step (only if svg selected)
+        for ($i=1; $i<=5; $i++) {
+            add_settings_field(
+                'step_svg_' . $i,
+                sprintf(__('Step %d SVG Icon', 'ewo-location-services'), $i),
+                function() use ($opts, $i) {
+                    $val = isset($opts['step_svg_'.$i]) ? $opts['step_svg_'.$i] : '';
+                    echo '<div class="ewo-step-icon-svg-row" data-icon-type="svg">';
+                    echo '<input type="text" id="ewo-step-svg-'.$i.'" name="ewo_service_listing_options[step_svg_'.$i.']" value="' . esc_attr($val) . '" style="width:60%" placeholder="Paste SVG URL or upload"> ';
+                    echo '<button class="button ewo-upload-svg" data-target="#ewo-step-svg-'.$i.'">Upload SVG</button>';
+                    if ($val) {
+                        echo '<div style="margin-top:8px;"><img src="' . esc_url($val) . '" alt="SVG preview" style="height:32px;width:32px;vertical-align:middle;"></div>';
+                    }
+                    echo '<p class="description">Upload an SVG file. Recommended size: 32x32px. If no SVG is uploaded, the default Dashicon will be used.</p>';
+                    echo '</div>';
+                },
+                'ewo_form_steps_customization',
+                'ewo_form_steps_customization'
+            );
+        }
+        // JS para alternar campos según el tipo de icono
+        add_action('admin_footer', function() {
+            $screen = get_current_screen();
+            if ($screen && strpos($screen->id, 'ewo-location-services') !== false) {
+                ?>
+                <script>
+                jQuery(function($){
+                    function toggleIconFields() {
+                        var type = $('#ewo-step-icon-type').val();
+                        $('.ewo-step-icon-dashicon-row').closest('tr').toggle(type === 'dashicons');
+                        $('.ewo-step-icon-svg-row').closest('tr').toggle(type === 'svg');
+                    }
+                    $('#ewo-step-icon-type').on('change', toggleIconFields);
+                    toggleIconFields(); // Ejecutar SIEMPRE al cargar
+                    // Media uploader para SVG
+                    $('.ewo-upload-svg').on('click', function(e){
+                        e.preventDefault();
+                        var target = $(this).data('target');
+                        var frame = wp.media({
+                            title: 'Select or Upload SVG',
+                            button: { text: 'Use this SVG' },
+                            library: { type: 'image/svg+xml' },
+                            multiple: false
+                        });
+                        frame.on('select', function(){
+                            var url = frame.state().get('selection').first().toJSON().url;
+                            $(target).val(url);
+                        });
+                        frame.open();
+                    });
+                });
+                </script>
+                <?php
+            }
+        });
+        // Sección de personalización de pasos
+        add_settings_section(
+            'ewo_form_steps_customization',
+            __('Form Steps Customization', 'ewo-location-services'),
+            function() {
+                echo '<p>Customize the appearance and content of the multi-step form progress bar.</p>';
+            },
+            'ewo_form_steps_customization'
         );
     }
 

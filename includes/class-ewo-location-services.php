@@ -219,7 +219,7 @@ class Ewo_Location_Services {
         );
         // Pasar opciones del admin al JS
         $listing_options = get_option('ewo_service_listing_options', array());
-        wp_localize_script('ewo-location-services-frontend', 'ewoServiceListingOptions', array(
+        wp_localize_script($this->plugin_name, 'ewoServiceListingOptions', array(
             'columns' => isset($listing_options['grid_columns']) ? intval($listing_options['grid_columns']) : 3,
             'per_page' => isset($listing_options['items_per_page']) ? intval($listing_options['items_per_page']) : 8,
             'show_pagination' => isset($listing_options['show_pagination']) ? $listing_options['show_pagination'] : 'yes',
@@ -227,6 +227,23 @@ class Ewo_Location_Services {
             'listing_mode' => isset($listing_options['listing_mode']) ? $listing_options['listing_mode'] : 'grid',
             'show_filters' => isset($listing_options['show_filters']) ? $listing_options['show_filters'] : 'yes',
             'card_color_usage' => isset($listing_options['card_color_usage']) ? $listing_options['card_color_usage'] : 'none',
+            'form_steps_style' => isset($listing_options['form_steps_style']) ? $listing_options['form_steps_style'] : 'progress_bar',
+            'step_active_color' => isset($listing_options['step_active_color']) ? $listing_options['step_active_color'] : '#c2185b',
+            'step_inactive_color' => isset($listing_options['step_inactive_color']) ? $listing_options['step_inactive_color'] : '#bbb',
+            'step_active_bg' => isset($listing_options['step_active_bg']) ? $listing_options['step_active_bg'] : '#ffe3ef',
+            'step_inactive_bg' => isset($listing_options['step_inactive_bg']) ? $listing_options['step_inactive_bg'] : '#eee',
+            'step_size' => isset($listing_options['step_size']) ? intval($listing_options['step_size']) : 32,
+            'show_step_labels' => isset($listing_options['show_step_labels']) ? $listing_options['show_step_labels'] : 'yes',
+            'step_label_1' => isset($listing_options['step_label_1']) ? $listing_options['step_label_1'] : 'Location',
+            'step_label_2' => isset($listing_options['step_label_2']) ? $listing_options['step_label_2'] : 'Service',
+            'step_label_3' => isset($listing_options['step_label_3']) ? $listing_options['step_label_3'] : 'Addons',
+            'step_label_4' => isset($listing_options['step_label_4']) ? $listing_options['step_label_4'] : 'Your Information',
+            'step_label_5' => isset($listing_options['step_label_5']) ? $listing_options['step_label_5'] : 'Confirmation',
+            'step_icon_1' => isset($listing_options['step_icon_1']) ? $listing_options['step_icon_1'] : 'location',
+            'step_icon_2' => isset($listing_options['step_icon_2']) ? $listing_options['step_icon_2'] : 'location',
+            'step_icon_3' => isset($listing_options['step_icon_3']) ? $listing_options['step_icon_3'] : 'location',
+            'step_icon_4' => isset($listing_options['step_icon_4']) ? $listing_options['step_icon_4'] : 'location',
+            'step_icon_5' => isset($listing_options['step_icon_5']) ? $listing_options['step_icon_5'] : 'location',
         ));
     }
 }
