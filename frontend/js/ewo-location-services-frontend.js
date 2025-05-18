@@ -21,6 +21,8 @@
     state: '',
     zip: ''
   };
+  // Nuevo: variable global para el plan seleccionado
+  let selectedPlan = null;
 
   // --- CONFIGURABLE OPTIONS ---
   const DEFAULT_COLUMNS = (window.ewoServiceListingOptions && ewoServiceListingOptions.columns) ? ewoServiceListingOptions.columns : 3;
@@ -341,15 +343,12 @@
     window.showLocationSection = function() {
       $(".ewo-section").removeClass("active");
       $("#ewo-location-form-container").addClass("active");
-      if (window.ewoCurrentStep !== 1) {
-        setActiveStep(1);
-      }
+      setActiveStep(1);
       if (map) {
         setTimeout(function () {
           map.invalidateSize();
         }, 10);
       }
-      // Inicializar autocompletado aquí también
       initAddressAutocomplete();
     };
 
@@ -471,8 +470,6 @@
   function updateCoordinates(lat, lng) {
     $("#ewo-latitude").val(lat);
     $("#ewo-longitude").val(lng);
-
-    console.log(`Coordenadas actualizadas: lat=${lat}, lng=${lng}`); // Para depuración
   }
 
   /**
@@ -645,8 +642,6 @@
       return;
     }
 
-    console.log(`Buscando servicios en: lat=${lat}, lng=${lng}`); // Para depuración
-
     // Mostrar sección de servicios y ocultar las demás
     $(".ewo-section").removeClass("active");
     $("#ewo-available-services-section").addClass("active");
@@ -714,8 +709,6 @@
    * Muestra los servicios recibidos desde la API
    */
   function displayServices(data) {
-    console.log("Datos recibidos:", data); // Debug
-
     let services = [];
 
     if (Array.isArray(data)) {
@@ -792,24 +785,17 @@
    * Maneja la selección de un servicio y muestra las opciones de cross-sell
    */
   function selectService() {
-    // Obtener el ID del servicio y otros datos
     const serviceId = $(this).data("service-id");
     const $serviceItem = $(this).closest(".ewo-service-item");
     const serviceDataStr = $serviceItem.attr("data-service-json");
-
     try {
-      // Guardar los datos del servicio seleccionado
       selectedService = JSON.parse(serviceDataStr);
-
-      // Guardar el ID en el campo oculto del formulario de usuario
       $("#ewo-selected-service").val(serviceId);
-
-      // Mostrar addons si existen, o ir directamente al formulario de usuario
-      if (selectedService.addons && selectedService.addons.length > 0) {
-        displayAddons(selectedService.addons);
-        showAddonsSection();
+      // Nuevo: obtener coverage_code y mostrar paso de planes
+      if (selectedService.coverage_code) {
+        getPlansForCoverage(selectedService.coverage_code);
       } else {
-        showUserSection();
+        alert('No coverage_code found for this service.');
       }
     } catch (e) {
       console.error("Error al procesar los datos del servicio", e);
@@ -821,31 +807,83 @@
   }
 
   /**
-   * Muestra los addons/opciones de cross-sell
+   * Función para obtener los planes usando coverage_code
    */
-  function displayAddons(addons) {
-    const $addonsList = $("#ewo-addons-list");
-    const $template = $("#ewo-addon-template");
-
-    // Limpiar lista anterior
-    $addonsList.empty();
-
-    addons.forEach(function (addon) {
-      // Clonar la plantilla
-      const $addonItem = $($template.html());
-
-      // Llenar con los datos del addon
-      $addonItem.find(".ewo-addon-name").text(addon.name || "Unnamed addon");
-      $addonItem.find(".ewo-addon-price").text(formatPrice(addon.price));
-      $addonItem
-        .find(".ewo-addon-description")
-        .text(addon.description || "No description");
-      $addonItem.find(".ewo-addon-select").val(addon.id);
-
-      // Añadir al listado
-      $addonsList.append($addonItem);
+  function getPlansForCoverage(coverageCode) {
+    // Mostrar preloader o limpiar lista
+    $('#ewo-plan-list').html('<div class="ewo-loading"><span class="ewo-spinner"></span> Loading plans...</div>');
+    // Mostrar el paso de planes
+    showPlanSection();
+    // Llamada AJAX al backend
+    $.ajax({
+      url: ewoLocationServices.ajax_url,
+      type: 'POST',
+      data: {
+        action: 'ewo_get_packages',
+        nonce: ewoLocationServices.nonce,
+        coverage_code: coverageCode
+      },
+      success: function(response) {
+        if (response.success && response.data && Array.isArray(response.data.packages)) {
+          renderPlans(response.data.packages);
+        } else {
+          $('#ewo-plan-list').html('<div class="ewo-error">No plans found for this service.</div>');
+        }
+      },
+      error: function() {
+        $('#ewo-plan-list').html('<div class="ewo-error">Error loading plans. Please try again.</div>');
+      }
     });
   }
+
+  /**
+   * Función para mostrar los planes y permitir selección
+   */
+  function renderPlans(plans) {
+    let html = '<div class="ewo-plan-options">';
+    plans.forEach(function(plan, idx) {
+      html += `<div class="ewo-plan-item">
+        <input type="radio" name="ewo-plan-radio" id="ewo-plan-radio-${idx}" value="${encodeURIComponent(JSON.stringify(plan))}" ${idx === 0 ? 'checked' : ''}>
+        <label for="ewo-plan-radio-${idx}">
+          <strong>${plan.plan_name || 'Unnamed Plan'}</strong><br>
+          <span>${plan.plan_description || ''}</span><br>
+          <span>Price: $${plan.price || '0.00'}</span>
+        </label>
+      </div>`;
+    });
+    html += '</div>';
+    $('#ewo-plan-list').html(html);
+    // Seleccionar el primer plan por defecto
+    selectedPlan = plans[0] || null;
+    // Evento para cambiar de plan
+    $('input[name="ewo-plan-radio"]').on('change', function() {
+      const planStr = decodeURIComponent($(this).val());
+      selectedPlan = JSON.parse(planStr);
+    });
+  }
+
+  /**
+   * Mostrar el paso de planes
+   */
+  function showPlanSection() {
+    $(".ewo-section").removeClass("active");
+    $("#ewo-plan-container").addClass("active");
+    setActiveStep(3);
+  }
+
+  /**
+   * Navegación: continuar a Your Information desde Plan
+   */
+  $('#ewo-continue-to-user').off('click').on('click', function(e) {
+    e.preventDefault();
+    if (!selectedPlan) {
+      alert('Please select a plan.');
+      return;
+    }
+    // Guardar el plan seleccionado para el envío final
+    window.ewoSelectedPlan = selectedPlan;
+    showUserSection();
+  });
 
   /**
    * Maneja el envío del formulario de usuario
@@ -854,12 +892,12 @@
     e.preventDefault();
     // Validar contraseñas solo si el usuario no está logueado
     if (!(window.ewoUserData && window.ewoUserData.logged_in)) {
-      const password = $("#ewo-user-password").val();
-      const passwordConfirm = $("#ewo-user-password-confirm").val();
-      if (password !== passwordConfirm) {
+    const password = $("#ewo-user-password").val();
+    const passwordConfirm = $("#ewo-user-password-confirm").val();
+    if (password !== passwordConfirm) {
         showError("#ewo-user-error", "Passwords do not match.");
-        return;
-      }
+      return;
+    }
     }
     // Recopilar addons seleccionados
     selectedAddons = [];
@@ -934,46 +972,37 @@
   function showLocationSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-location-form-container").addClass("active");
-    if (window.ewoCurrentStep !== 1) {
-      setActiveStep(1);
-    }
+    setActiveStep(1);
     if (map) {
       setTimeout(function () {
         map.invalidateSize();
       }, 10);
     }
+    initAddressAutocomplete();
   }
 
   function showServicesSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-available-services-section").addClass("active");
-    if (window.ewoCurrentStep !== 2) {
-      setActiveStep(2);
-    }
+    setActiveStep(2);
   }
 
   function showAddonsSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-addons-container").addClass("active");
-    if (window.ewoCurrentStep !== 4) {
-      setActiveStep(4);
-    }
+    setActiveStep(4);
   }
 
   function showUserSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-user-container").addClass("active");
-    if (window.ewoCurrentStep !== 3) {
-      setActiveStep(3);
-    }
+    setActiveStep(5);
   }
 
   function showConfirmationSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-confirmation-container").addClass("active");
-    if (window.ewoCurrentStep !== 5) {
-      setActiveStep(5);
-    }
+    setActiveStep(6);
   }
 
   // --- MULTISTEP LOGIC RESTAURADA ---
@@ -984,7 +1013,6 @@
     const opts = window.ewoServiceListingOptions || {};
     const size = opts.step_size ? parseInt(opts.step_size, 10) : 32;
     const showLabels = opts.show_step_labels === 'yes';
-    // Lógica corregida: si es vacío, null, undefined o distinto de 'dashicons'/'svg', mostrar números
     let iconType = 'none';
     if (opts.step_icon_type === 'dashicons' || opts.step_icon_type === 'svg') {
       iconType = opts.step_icon_type;
@@ -992,13 +1020,45 @@
     const style = opts.form_steps_style || 'progress_bar';
     const activeColor = opts.step_active_color || '#c2185b';
     const inactiveColor = opts.step_inactive_color || '#e5e1e1';
-    const totalSteps = $stepsOl.find('.ewo-step').length;
+    const activeBg = opts.step_active_bg || '#ffe3ef';
+    const inactiveBg = opts.step_inactive_bg || '#eee';
+    const totalSteps = 6;
     let activeStep = window.ewoCurrentStep || 1;
-
+    const stepLabels = [
+      opts.step_label_1 || 'Location',
+      opts.step_label_2 || 'Service',
+      opts.step_label_3 || 'Plan',
+      opts.step_label_4 || 'User Information',
+      opts.step_label_5 || 'Addons',
+      opts.step_label_6 || 'Confirmation'
+    ];
     if (style === 'circles') {
       $stepsOl.show();
       $stepsProgress.hide();
-      // Aquí va el render de círculos clásico (no manipular desde autocompletado)
+      // Render círculos con colores personalizados
+      $stepsOl.empty();
+      for (let i = 1; i <= totalSteps; i++) {
+        const label = stepLabels[i-1];
+        const isActive = (i === activeStep);
+        let iconHtml = '';
+        let iconStyle = `background:${isActive ? activeBg : inactiveBg};color:${isActive ? activeColor : inactiveColor};border-radius:50%;padding:2px;display:inline-block;`;
+        if (iconType === 'dashicons') {
+          const icon = opts['step_icon_' + i] || 'location';
+          iconHtml = '<span class="dashicons dashicons-' + icon + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
+        } else if (iconType === 'svg') {
+          const svgUrl = opts['step_svg_' + i] || '';
+          if (svgUrl) {
+            iconHtml = '<img src="' + svgUrl + '" style="width:' + (size * 0.7) + 'px;height:' + (size * 0.7) + 'px;' + iconStyle + '" alt="Step icon">';
+          } else {
+            const icon = opts['step_icon_' + i] || 'location';
+            iconHtml = '<span class="dashicons dashicons-' + icon + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
+          }
+        } else {
+          iconHtml = '<span class="ewo-step-number" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '">' + i + '</span>';
+        }
+        let labelStyle = `color:${isActive ? activeColor : inactiveColor};font-weight:${isActive ? 'bold' : 'normal'};display:block;margin-top:4px;`;
+        $stepsOl.append('<li class="ewo-step' + (isActive ? ' active' : '') + '" data-step="' + i + '" style="flex:1;text-align:center;list-style:none;">' + iconHtml + (showLabels ? '<span class="ewo-step-label" style="' + labelStyle + '">' + label + '</span>' : '') + '</li>');
+      }
     } else if (style === 'progress_bar') {
       $stepsOl.hide();
       $stepsProgress.show();
@@ -1006,40 +1066,40 @@
       for (let i = 1; i <= totalSteps; i++) {
         let iconHtml = '';
         let iconClass = (i === activeStep) ? 'active' : '';
+        let iconStyle = `background:${i === activeStep ? activeBg : inactiveBg};color:${i === activeStep ? activeColor : inactiveColor};border-radius:50%;padding:2px;display:inline-block;`;
         if (iconType === 'dashicons') {
           const icon = opts['step_icon_' + i] || 'location';
-          iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;display:inline-block;"></span>';
+          iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
         } else if (iconType === 'svg') {
           const svgUrl = opts['step_svg_' + i] || '';
           if (svgUrl) {
-            iconHtml = '<img src="' + svgUrl + '" class="' + iconClass + '" style="width:' + (size * 0.7) + 'px;height:' + (size * 0.7) + 'px;display:block;margin:auto;" alt="Step icon">';
+            iconHtml = '<img src="' + svgUrl + '" class="' + iconClass + '" style="width:' + (size * 0.7) + 'px;height:' + (size * 0.7) + 'px;' + iconStyle + '" alt="Step icon">';
           } else {
             const icon = opts['step_icon_' + i] || 'location';
-            iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;display:inline-block;"></span>';
+            iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
           }
         } else if (iconType === 'none') {
-          iconHtml = '<span class="ewo-step-number ' + iconClass + '" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;">' + i + '</span>';
+          iconHtml = '<span class="ewo-step-number ' + iconClass + '" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '">' + i + '</span>';
         }
         iconsHtml += '<span class="ewo-progress-icon ' + iconClass + '" style="flex:1;text-align:center;">' + iconHtml + '</span>';
       }
       iconsHtml += '</div>';
       let labelsHtml = '<div class="ewo-progress-labels" style="display:flex;justify-content:space-between;margin-bottom:6px;">';
       for (let i = 1; i <= totalSteps; i++) {
-        const label = opts['step_label_' + i] || $stepsOl.find('.ewo-step').eq(i-1).text().replace(/^\d+\.?\s*/, '');
+        const label = stepLabels[i-1];
         const activeClass = (i === activeStep) ? 'active' : '';
-        labelsHtml += '<span class="ewo-progress-label ' + activeClass + '" style="flex:1;text-align:center;font-size:0.98em;padding:0 4px;min-width:60px;white-space:nowrap;">' + label + '</span>';
+        let labelStyle = `color:${i === activeStep ? activeColor : inactiveColor};font-weight:${i === activeStep ? 'bold' : 'normal'};`;
+        labelsHtml += '<span class="ewo-progress-label ' + activeClass + '" style="flex:1;text-align:center;font-size:0.98em;padding:0 4px;min-width:60px;white-space:nowrap;' + labelStyle + '">' + label + '</span>';
       }
       labelsHtml += '</div>';
-      let barHtml = '<div class="ewo-progress-bar-bg" style="position:relative;height:10px;border-radius:5px;background:var(--ewo-inactive-bg,#eee);overflow:hidden;">';
+      let barHtml = '<div class="ewo-progress-bar-bg" style="position:relative;height:10px;border-radius:5px;background:' + inactiveBg + ';overflow:hidden;">';
       const percent = (activeStep/totalSteps)*100;
-      barHtml += '<div class="ewo-progress-bar-fill" style="position:absolute;left:0;top:0;height:100%;width:' + percent + '%;background:var(--ewo-active-color,#c2185b);transition:width 0.5s cubic-bezier(.4,0,.2,1);"></div>';
+      barHtml += '<div class="ewo-progress-bar-fill" style="position:absolute;left:0;top:0;height:100%;width:' + percent + '%;background:' + activeColor + ';transition:width 0.5s cubic-bezier(.4,0,.2,1);"></div>';
       barHtml += '</div>';
       $stepsProgress.html(iconsHtml + barHtml + labelsHtml);
     }
     $('#ewo-form-steps, #ewo-form-steps-progress').addClass('ewo-steps-ready');
   }
-  // Solo llamar a renderCustomSteps aquí y desde setActiveStep
-  renderCustomSteps();
   function setActiveStep(step) {
     window.ewoCurrentStep = step;
     $('#ewo-form-steps .ewo-step').removeClass('active');

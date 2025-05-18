@@ -17,9 +17,10 @@ if (!defined('ABSPATH')) {
     <ol id="ewo-form-steps" class="ewo-form-steps ewo-form-steps-progress-bar">
         <li class="ewo-step active" data-step="1">1. Location</li>
         <li class="ewo-step" data-step="2">2. Service</li>
-        <li class="ewo-step" data-step="3">3. Your Information</li>
-        <li class="ewo-step" data-step="4">4. Addons</li>
-        <li class="ewo-step" data-step="5">5. Confirmation</li>
+        <li class="ewo-step" data-step="3">3. Plan</li>
+        <li class="ewo-step" data-step="4">4. Your Information</li>
+        <li class="ewo-step" data-step="5">5. Addons</li>
+        <li class="ewo-step" data-step="6">6. Confirmation</li>
     </ol>
     <div id="ewo-form-steps-progress" style="display:none;"></div>
 
@@ -106,6 +107,16 @@ if (!defined('ABSPATH')) {
             <button class="ewo-button ewo-button-secondary ewo-retry-button">
                 <?php _e('Try Again', 'ewo-location-services'); ?>
             </button>
+        </div>
+    </div>
+    
+    <!-- Nuevo paso: Selección de Plan (inicialmente oculto) -->
+    <div id="ewo-plan-container" class="ewo-section">
+        <h2><?php _e('Choose Your Plan', 'ewo-location-services'); ?></h2>
+        <div id="ewo-plan-list"></div>
+        <div class="ewo-form-actions">
+            <button id="ewo-back-to-services" class="ewo-button ewo-button-secondary"><?php _e('Back', 'ewo-location-services'); ?></button>
+            <button id="ewo-continue-to-user" class="ewo-button ewo-button-primary"><?php _e('Continue', 'ewo-location-services'); ?></button>
         </div>
     </div>
     

@@ -97,6 +97,9 @@ class Ewo_Location_Services_Frontend {
         // Scripts para Leaflet (si usamos OpenStreetMap)
         wp_enqueue_script($this->plugin_name . '-leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array(), '1.7.1', false);
 
+        // Encolar el JS de planes/addons
+        wp_enqueue_script($this->plugin_name . '-plans', plugin_dir_url(__FILE__) . 'js/ewo-location-plans.js', array('jquery', $this->plugin_name), $this->version, true);
+
         // Forzar carga de jQuery UI Autocomplete y CSS
         wp_enqueue_script('jquery-ui-core');
         wp_enqueue_script('jquery-ui-autocomplete');
@@ -128,6 +131,13 @@ class Ewo_Location_Services_Frontend {
             'step_inactive_color' => isset($listing_options['step_inactive_color']) ? $listing_options['step_inactive_color'] : '#bbb',
             'autocomplete_provider' => $autocomplete_provider,
             'autocomplete_api_key' => isset($listing_options['autocomplete_api_key']) ? $listing_options['autocomplete_api_key'] : '',
+            // Labels personalizados
+            'step_label_1' => isset($listing_options['step_label_1']) ? $listing_options['step_label_1'] : 'Location',
+            'step_label_2' => isset($listing_options['step_label_2']) ? $listing_options['step_label_2'] : 'Service',
+            'step_label_3' => isset($listing_options['step_label_3']) ? $listing_options['step_label_3'] : 'Plan',
+            'step_label_4' => isset($listing_options['step_label_4']) ? $listing_options['step_label_4'] : 'Addons',
+            'step_label_5' => isset($listing_options['step_label_5']) ? $listing_options['step_label_5'] : 'Your Information',
+            'step_label_6' => isset($listing_options['step_label_6']) ? $listing_options['step_label_6'] : 'Confirmation',
         ));
     }
 

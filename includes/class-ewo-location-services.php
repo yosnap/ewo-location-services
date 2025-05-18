@@ -47,6 +47,33 @@ class Ewo_Location_Services {
     protected $logger;
 
     /**
+     * El sistema de registro del plugin.
+     *
+     * @since    1.0.0
+     * @access   protected
+     * @var      Ewo_Location_Plans    $plans    El sistema de registro del plugin.
+     */
+    protected $plans;
+
+    /**
+     * El sistema de registro del plugin.
+     *
+     * @since    1.0.0
+     * @access   protected
+     * @var      Ewo_Location_Opportunity    $opportunity    El sistema de registro del plugin.
+     */
+    protected $opportunity;
+
+    /**
+     * El sistema de registro del plugin.
+     *
+     * @since    1.0.0
+     * @access   protected
+     * @var      Ewo_Location_User    $user    El sistema de registro del plugin.
+     */
+    protected $user;
+
+    /**
      * Define las funcionalidades principales del plugin.
      *
      * Establece el nombre y la versión del plugin que puede ser utilizado a lo largo del plugin.
@@ -92,10 +119,26 @@ class Ewo_Location_Services {
         // La clase responsable de definir todas las acciones en el área pública.
         require_once plugin_dir_path(dirname(__FILE__)) . 'frontend/class-ewo-location-services-frontend.php';
 
+        // Incluir la nueva clase Ewo_Location_Plans
+        require_once plugin_dir_path(__FILE__) . 'class-ewo-location-plans.php';
+
+        // Incluir la nueva clase Ewo_Location_Opportunity
+        require_once plugin_dir_path(__FILE__) . 'class-ewo-location-opportunity.php';
+
+        // Incluir la nueva clase Ewo_Location_User
+        require_once plugin_dir_path(__FILE__) . 'class-ewo-location-user.php';
+
         // Inicializar el logger
         $this->logger = new Ewo_Location_Services_Logger();
 
         $this->loader = new Ewo_Location_Services_Loader();
+
+        // Instanciar la clase de planes para registrar sus hooks
+        $this->plans = new Ewo_Location_Plans($this->get_plugin_name(), $this->get_version());
+        // Instanciar la clase de oportunidades
+        $this->opportunity = new Ewo_Location_Opportunity($this->get_plugin_name(), $this->get_version(), $this->logger);
+        // Instanciar la clase de usuarios
+        $this->user = new Ewo_Location_User($this->get_plugin_name(), $this->get_version(), $this->logger);
     }
 
     /**
@@ -209,7 +252,6 @@ class Ewo_Location_Services {
     }
 
     public function enqueue_scripts() {
-        // ... código existente ...
         wp_enqueue_script(
             'ewo-location-services-frontend',
             plugin_dir_url(__FILE__) . '../frontend/js/ewo-location-services-frontend.js',
@@ -236,14 +278,23 @@ class Ewo_Location_Services {
             'show_step_labels' => isset($listing_options['show_step_labels']) ? $listing_options['show_step_labels'] : 'yes',
             'step_label_1' => isset($listing_options['step_label_1']) ? $listing_options['step_label_1'] : 'Location',
             'step_label_2' => isset($listing_options['step_label_2']) ? $listing_options['step_label_2'] : 'Service',
-            'step_label_3' => isset($listing_options['step_label_3']) ? $listing_options['step_label_3'] : 'Addons',
-            'step_label_4' => isset($listing_options['step_label_4']) ? $listing_options['step_label_4'] : 'Your Information',
-            'step_label_5' => isset($listing_options['step_label_5']) ? $listing_options['step_label_5'] : 'Confirmation',
+            'step_label_3' => isset($listing_options['step_label_3']) ? $listing_options['step_label_3'] : 'Plan',
+            'step_label_4' => isset($listing_options['step_label_4']) ? $listing_options['step_label_4'] : 'Addons',
+            'step_label_5' => isset($listing_options['step_label_5']) ? $listing_options['step_label_5'] : 'Your Information',
+            'step_label_6' => isset($listing_options['step_label_6']) ? $listing_options['step_label_6'] : 'Confirmation',
+            'step_icon_type' => isset($listing_options['step_icon_type']) ? $listing_options['step_icon_type'] : 'dashicons',
             'step_icon_1' => isset($listing_options['step_icon_1']) ? $listing_options['step_icon_1'] : 'location',
             'step_icon_2' => isset($listing_options['step_icon_2']) ? $listing_options['step_icon_2'] : 'location',
-            'step_icon_3' => isset($listing_options['step_icon_3']) ? $listing_options['step_icon_3'] : 'location',
-            'step_icon_4' => isset($listing_options['step_icon_4']) ? $listing_options['step_icon_4'] : 'location',
-            'step_icon_5' => isset($listing_options['step_icon_5']) ? $listing_options['step_icon_5'] : 'location',
+            'step_icon_3' => isset($listing_options['step_icon_3']) ? $listing_options['step_icon_3'] : 'list-view',
+            'step_icon_4' => isset($listing_options['step_icon_4']) ? $listing_options['step_icon_4'] : 'plus',
+            'step_icon_5' => isset($listing_options['step_icon_5']) ? $listing_options['step_icon_5'] : 'admin-users',
+            'step_icon_6' => isset($listing_options['step_icon_6']) ? $listing_options['step_icon_6'] : 'yes',
+            'step_svg_1' => isset($listing_options['step_svg_1']) ? $listing_options['step_svg_1'] : '',
+            'step_svg_2' => isset($listing_options['step_svg_2']) ? $listing_options['step_svg_2'] : '',
+            'step_svg_3' => isset($listing_options['step_svg_3']) ? $listing_options['step_svg_3'] : '',
+            'step_svg_4' => isset($listing_options['step_svg_4']) ? $listing_options['step_svg_4'] : '',
+            'step_svg_5' => isset($listing_options['step_svg_5']) ? $listing_options['step_svg_5'] : '',
+            'step_svg_6' => isset($listing_options['step_svg_6']) ? $listing_options['step_svg_6'] : '',
             'show_form_steps' => isset($listing_options['show_form_steps']) ? $listing_options['show_form_steps'] : 'yes',
         ));
     }

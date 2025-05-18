@@ -729,8 +729,8 @@ class Ewo_Location_Services_Admin {
             'ewo_form_steps_customization'
         );
         // Custom Step Labels
-        $default_labels = ['Location','Service','Addons','Your Information','Confirmation'];
-        for ($i=1; $i<=5; $i++) {
+        $default_labels = ['Location','Service','Plan','Addons','Your Information','Confirmation'];
+        for ($i=1; $i<=6; $i++) {
             add_settings_field(
                 'step_label_' . $i,
                 sprintf(__('Step %d Label', 'ewo-location-services'), $i),
@@ -758,7 +758,7 @@ class Ewo_Location_Services_Admin {
             'ewo_form_steps_customization'
         );
         // Dashicon for each step (only if dashicons selected)
-        for ($i=1; $i<=5; $i++) {
+        for ($i=1; $i<=6; $i++) {
             add_settings_field(
                 'step_icon_' . $i,
                 sprintf(__('Step %d Dashicon', 'ewo-location-services'), $i),
@@ -774,7 +774,7 @@ class Ewo_Location_Services_Admin {
             );
         }
         // SVG upload for each step (only if svg selected)
-        for ($i=1; $i<=5; $i++) {
+        for ($i=1; $i<=6; $i++) {
             add_settings_field(
                 'step_svg_' . $i,
                 sprintf(__('Step %d SVG Icon', 'ewo-location-services'), $i),
