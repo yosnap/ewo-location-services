@@ -31,14 +31,30 @@ $log_content = '';
 if (!empty($current_log) && file_exists($log_file_path)) {
     $log_content = file_get_contents($log_file_path);
 }
+
+$opts = get_option('ewo_location_services_options');
+$logging_enabled = isset($opts['logging_enabled']) ? $opts['logging_enabled'] : 'yes';
 ?>
 
 <div class="wrap">
     <h1><?php echo esc_html(get_admin_page_title()); ?> - <?php _e('Logs', 'ewo-location-services'); ?></h1>
+    <?php if ($logging_enabled !== 'yes'): ?>
+    <div class="notice notice-warning" style="border-left:4px solid #d63638; background:#fff3f3;">
+        <p><strong>Logging is currently disabled.</strong> No new log entries will be recorded until you enable logging in the plugin settings.</p>
+    </div>
+    <?php endif; ?>
     
-    <?php if ($log_cleared): ?>
+    <?php if ($log_cleared == 1): ?>
     <div class="notice notice-success is-dismissible">
-        <p><?php _e('Log file cleared successfully.', 'ewo-location-services'); ?></p>
+        <p><?php _e('Log file deleted successfully.', 'ewo-location-services'); ?></p>
+    </div>
+    <?php elseif ($log_cleared == 2): ?>
+    <div class="notice notice-warning is-dismissible">
+        <p><?php _e('Log file could not be deleted, but it was emptied successfully.', 'ewo-location-services'); ?></p>
+    </div>
+    <?php elseif (isset($_GET['error']) && $_GET['error'] == 1): ?>
+    <div class="notice notice-error is-dismissible">
+        <p><?php _e('Log file could not be deleted or emptied. Please check file permissions.', 'ewo-location-services'); ?></p>
     </div>
     <?php endif; ?>
     

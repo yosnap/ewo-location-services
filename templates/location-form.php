@@ -52,8 +52,11 @@ if (!defined('ABSPATH')) {
     <!-- ===================== Available Services Section ===================== -->
     <div id="ewo-available-services-section" class="ewo-section">
         <h2>Available Services</h2>
-        <!-- Change location button -->
+        <!-- Botones para volver al paso 1 -->
         <button id="ewo-change-location-btn" type="button" style="margin-bottom: 1rem;">Change location</button>
+        <button id="ewo-back-to-location" class="ewo-button ewo-button-secondary" style="margin-bottom: 1rem;">
+            <?php _e('Back', 'ewo-location-services'); ?>
+        </button>
         <!-- Controls: filters, ordering, view toggle, columns, pagination -->
         <div id="ewo-services-controls"></div>
         <!-- Preloader -->

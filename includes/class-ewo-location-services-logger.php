@@ -71,6 +71,11 @@ class Ewo_Location_Services_Logger {
      * @param    string    $type       El tipo de mensaje (INFO, WARNING, ERROR, DEBUG).
      */
     public function log($message, $type = 'INFO') {
+        // Comprobar si el logging está habilitado
+        $opts = get_option('ewo_location_services_options');
+        if (isset($opts['logging_enabled']) && $opts['logging_enabled'] !== 'yes') {
+            return;
+        }
         // Asegurarse de que el tipo de log es válido
         $type = in_array(strtoupper($type), $this->log_types) ? strtoupper($type) : 'INFO';
         

@@ -195,6 +195,7 @@ class Ewo_Location_Services_Admin {
             <div class="ewo-tabs" style="margin-bottom: 2rem;">
                 <button class="ewo-tab-btn active" data-tab="display">Service Listing Display</button>
                 <button class="ewo-tab-btn" data-tab="steps">Form Steps Customization</button>
+                <button class="ewo-tab-btn" data-tab="autocomplete">Autocomplete</button>
             </div>
             <form method="post" action="options.php">
                 <?php
@@ -204,6 +205,9 @@ class Ewo_Location_Services_Admin {
                 echo '</div>';
                 echo '<div id="ewo-tab-content-steps" class="ewo-tab-content">';
                 do_settings_sections('ewo_form_steps_customization');
+                echo '</div>';
+                echo '<div id="ewo-tab-content-autocomplete" class="ewo-tab-content">';
+                do_settings_sections('ewo_autocomplete_settings');
                 echo '</div>';
                 submit_button();
                 ?>
@@ -225,6 +229,9 @@ class Ewo_Location_Services_Admin {
                 if(tab === 'steps') {
                     $('.ewo-tab-btn[data-tab="steps"]').addClass('active');
                     $('#ewo-tab-content-steps').addClass('active');
+                } else if(tab === 'autocomplete') {
+                    $('.ewo-tab-btn[data-tab="autocomplete"]').addClass('active');
+                    $('#ewo-tab-content-autocomplete').addClass('active');
                 } else {
                     $('.ewo-tab-btn[data-tab="display"]').addClass('active');
                     $('#ewo-tab-content-display').addClass('active');
@@ -239,14 +246,17 @@ class Ewo_Location_Services_Admin {
             var lastTab = localStorage.getItem('ewo_service_listing_tab') || 'display';
             setActiveTab(lastTab);
 
-            // --- ALTERNANCIA DE CAMPOS DE ICONOS ---
-            function toggleIconFields() {
-                var type = $('#ewo-step-icon-type').val();
-                $('.ewo-step-icon-dashicon-row').closest('tr').toggle(type === 'dashicons');
-                $('.ewo-step-icon-svg-row').closest('tr').toggle(type === 'svg');
+            // Mostrar/ocultar input de API key según proveedor
+            function toggleApiKeyField() {
+                var provider = $('#ewo_autocomplete_provider').val();
+                if (provider === 'google' || provider === 'mapbox') {
+                    $('#ewo_autocomplete_api_key_row').show();
+                } else {
+                    $('#ewo_autocomplete_api_key_row').hide();
+                }
             }
-            $('#ewo-step-icon-type').on('change', toggleIconFields);
-            toggleIconFields(); // Ejecutar SIEMPRE al cargar
+            $('#ewo_autocomplete_provider').on('change', toggleApiKeyField);
+            toggleApiKeyField(); // Ejecutar SIEMPRE al cargar
             // Media uploader para SVG
             $('.ewo-upload-svg').on('click', function(e){
                 e.preventDefault();
@@ -305,6 +315,19 @@ class Ewo_Location_Services_Admin {
             'api_key',
             __('API Key', 'ewo-location-services'),
             array($this, 'settings_field_api_key_cb'),
+            'ewo_location_services_options',
+            'ewo_location_services_general'
+        );
+
+        // Switch para activar/desactivar logs
+        add_settings_field(
+            'logging_enabled',
+            __('Enable Logging', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_location_services_options');
+                $val = isset($opts['logging_enabled']) ? $opts['logging_enabled'] : 'yes';
+                echo '<label><input type="checkbox" name="ewo_location_services_options[logging_enabled]" value="yes"' . checked($val, 'yes', false) . '> ' . __('Enable plugin logging (recommended for debugging)', 'ewo-location-services') . '</label>';
+            },
             'ewo_location_services_options',
             'ewo_location_services_general'
         );
@@ -845,6 +868,45 @@ class Ewo_Location_Services_Admin {
             },
             'ewo_form_steps_customization'
         );
+        // Sección y campos para Autocomplete
+        add_settings_section(
+            'ewo_autocomplete_settings_section',
+            __('Autocomplete Settings', 'ewo-location-services'),
+            function() {
+                echo '<p>' . __('Configure the address autocomplete provider for the location form.', 'ewo-location-services') . '</p>';
+            },
+            'ewo_autocomplete_settings'
+        );
+        add_settings_field(
+            'autocomplete_provider',
+            __('Autocomplete Provider', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['autocomplete_provider']) ? $opts['autocomplete_provider'] : 'nominatim';
+                echo '<select id="ewo_autocomplete_provider" name="ewo_service_listing_options[autocomplete_provider]">';
+                echo '<option value="nominatim"' . selected($val, 'nominatim', false) . '>Nominatim (OpenStreetMap)</option>';
+                echo '<option value="google"' . selected($val, 'google', false) . '>Google Places</option>';
+                echo '<option value="mapbox"' . selected($val, 'mapbox', false) . '>Mapbox</option>';
+                echo '<option value="algolia"' . selected($val, 'algolia', false) . '>Algolia Places</option>';
+                echo '</select>';
+            },
+            'ewo_autocomplete_settings',
+            'ewo_autocomplete_settings_section'
+        );
+        add_settings_field(
+            'autocomplete_api_key',
+            __('API Key', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['autocomplete_api_key']) ? esc_attr($opts['autocomplete_api_key']) : '';
+                echo '<div id="ewo_autocomplete_api_key_row">';
+                echo '<input type="text" name="ewo_service_listing_options[autocomplete_api_key]" value="' . $val . '" style="width: 350px;">';
+                echo '<p class="description">' . __('Required for Google Places or Mapbox. Leave empty for Nominatim or Algolia.', 'ewo-location-services') . '</p>';
+                echo '</div>';
+            },
+            'ewo_autocomplete_settings',
+            'ewo_autocomplete_settings_section'
+        );
     }
 
     /**
@@ -886,13 +948,6 @@ class Ewo_Location_Services_Admin {
         <p class="description"><?php _e('Enter your API key for authentication.', 'ewo-location-services'); ?></p>
         <?php
     }
-
-    /**
-     * Este comentario reemplaza los métodos eliminados para los campos redundantes.
-     * Los campos de URLs generales (Service Lookup y Opportunities) fueron eliminados
-     * ya que son reemplazados por los campos específicos en las secciones de Serviceability,
-     * Packages, Customers y Opportunity.
-     */
 
     /**
      * Callback para la sección de configuración de Serviceability.
@@ -1277,9 +1332,22 @@ class Ewo_Location_Services_Admin {
             $file_path = $log_dir . $file;
             
             if (file_exists($file_path) && is_file($file_path)) {
-                file_put_contents($file_path, '');
-                wp_redirect(admin_url('admin.php?page=' . $this->plugin_name . '-logs&cleared=1'));
-                exit;
+                $unlink_result = unlink($file_path);
+                clearstatcache(); // Limpiar caché de estado de archivos
+                if (!file_exists($file_path)) {
+                    wp_redirect(admin_url('admin.php?page=' . $this->plugin_name . '-logs&cleared=1'));
+                    exit;
+                } else {
+                    // Fallback: vaciar el archivo si no se puede eliminar
+                    $empty_result = file_put_contents($file_path, '');
+                    if ($empty_result !== false) {
+                        wp_redirect(admin_url('admin.php?page=' . $this->plugin_name . '-logs&cleared=2'));
+                        exit;
+                    } else {
+                        wp_redirect(admin_url('admin.php?page=' . $this->plugin_name . '-logs&cleared=0&error=1'));
+                        exit;
+                    }
+                }
             }
         }
     }
@@ -1407,4 +1475,13 @@ class Ewo_Location_Services_Admin {
             'debug' => $debug_data
         ));
     }
+}
+
+if (is_admin()) {
+    add_action('admin_post_clear_log', function() {
+        require_once dirname(__DIR__) . '/includes/class-ewo-location-services-logger.php';
+        $logger = new Ewo_Location_Services_Logger();
+        $admin = new Ewo_Location_Services_Admin('ewo-location-services', defined('EWO_LOCATION_SERVICES_VERSION') ? EWO_LOCATION_SERVICES_VERSION : '1.0.0', $logger);
+        $admin->handle_log_clear();
+    });
 }

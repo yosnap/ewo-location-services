@@ -94,13 +94,24 @@ class Ewo_Location_Services_Frontend {
         // Scripts para Leaflet (si usamos OpenStreetMap)
         wp_enqueue_script($this->plugin_name . '-leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array(), '1.7.1', false);
 
+        // Forzar carga de jQuery UI Autocomplete y CSS
+        wp_enqueue_script('jquery-ui-core');
+        wp_enqueue_script('jquery-ui-autocomplete');
+        wp_enqueue_style('jquery-ui-css', 'https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css');
+
+        // Forzar carga de Algolia Places solo si el proveedor es algolia
+        $listing_options = get_option('ewo_service_listing_options', array());
+        $autocomplete_provider = isset($listing_options['autocomplete_provider']) ? $listing_options['autocomplete_provider'] : 'nominatim';
+        if ($autocomplete_provider === 'algolia') {
+            wp_enqueue_script('algolia-places', 'https://cdn.jsdelivr.net/npm/places.js@1.19.0', array(), null, true);
+        }
+
         // Configuración para AJAX
         wp_localize_script($this->plugin_name, 'ewoLocationServices', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ewo_location_services_nonce')
         ));
         // Pasar opciones del admin al JS (transformadas)
-        $listing_options = get_option('ewo_service_listing_options', array());
         wp_localize_script($this->plugin_name, 'ewoServiceListingOptions', array(
             'columns' => isset($listing_options['grid_columns']) ? intval($listing_options['grid_columns']) : 3,
             'per_page' => isset($listing_options['items_per_page']) ? intval($listing_options['items_per_page']) : 8,
@@ -112,6 +123,8 @@ class Ewo_Location_Services_Frontend {
             'form_steps_style' => isset($listing_options['form_steps_style']) ? $listing_options['form_steps_style'] : 'progress_bar',
             'step_active_color' => isset($listing_options['step_active_color']) ? $listing_options['step_active_color'] : '#c2185b',
             'step_inactive_color' => isset($listing_options['step_inactive_color']) ? $listing_options['step_inactive_color'] : '#bbb',
+            'autocomplete_provider' => $autocomplete_provider,
+            'autocomplete_api_key' => isset($listing_options['autocomplete_api_key']) ? $listing_options['autocomplete_api_key'] : '',
         ));
     }
 

@@ -75,6 +75,7 @@
 
     // Eventos para navegación entre secciones
     $("#ewo-back-to-location").on("click", showLocationSection);
+    $("#ewo-change-location-btn").on("click", showLocationSection);
     $("#ewo-back-to-services").on("click", showServicesSection);
     $("#ewo-back-to-addons").on("click", showAddonsSection);
     $("#ewo-continue-to-user").on("click", showUserSection);
@@ -135,6 +136,205 @@
       currentPage++;
       renderServices();
     });
+
+    // --- AUTOCOMPLETADO DE DIRECCIONES ---
+    const autocompleteProvider = window.ewoServiceListingOptions?.autocomplete_provider || 'nominatim';
+    const autocompleteApiKey = window.ewoServiceListingOptions?.autocomplete_api_key || '';
+
+    function setLatLngFromAutocomplete(lat, lon) {
+      $('#ewo-latitude').val(lat);
+      $('#ewo-longitude').val(lon);
+      if (typeof map !== 'undefined' && map) {
+        map.setView([lat, lon], 15);
+        if (typeof marker !== 'undefined' && marker) {
+          marker.setLatLng([lat, lon]);
+        }
+      }
+    }
+
+    function initAddressAutocomplete() {
+      const input = document.getElementById('ewo-address-input');
+      if (!input) return;
+      // Limpia cualquier autocompletado previo
+      $(input).off();
+      if (autocompleteProvider === 'nominatim') {
+        if ($.ui && $.ui.autocomplete) {
+          // Solo destruir si ya está inicializado
+          if ($.data(input, 'ui-autocomplete')) {
+            $(input).autocomplete('destroy');
+          }
+          $(input).autocomplete({
+            minLength: 3,
+            source: function(request, response) {
+              $.ajax({
+                url: 'https://nominatim.openstreetmap.org/search',
+                dataType: 'json',
+                data: {
+                  q: request.term,
+                  format: 'json',
+                  addressdetails: 1,
+                  countrycodes: 'us',
+                  'accept-language': 'en',
+                  limit: 5
+                },
+                success: function(data) {
+                  response($.map(data, function(item) {
+                    return {
+                      label: item.display_name,
+                      value: item.display_name,
+                      lat: item.lat,
+                      lon: item.lon
+                    };
+                  }));
+                }
+              });
+            },
+            select: function(event, ui) {
+              $(input).val(ui.item.value);
+              setLatLngFromAutocomplete(ui.item.lat, ui.item.lon);
+              return false;
+            }
+          });
+        }
+      } else if (autocompleteProvider === 'google') {
+        function loadGooglePlacesScript(callback) {
+          if (window.google && window.google.maps && window.google.maps.places) {
+            callback();
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${autocompleteApiKey}&libraries=places&language=en&region=US`;
+          script.async = true;
+          script.onload = callback;
+          document.head.appendChild(script);
+        }
+        loadGooglePlacesScript(function() {
+          const autocomplete = new google.maps.places.Autocomplete(input, {
+            types: ['address'],
+            componentRestrictions: { country: 'us' },
+          });
+          autocomplete.setFields(['formatted_address', 'geometry']);
+          autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (place && place.geometry && place.geometry.location) {
+              const lat = place.geometry.location.lat();
+              const lon = place.geometry.location.lng();
+              setLatLngFromAutocomplete(lat, lon);
+              $(input).val(place.formatted_address);
+            }
+          });
+        });
+      } else if (autocompleteProvider === 'mapbox') {
+        function loadMapboxScript(callback) {
+          if (window.MapboxGeocoder) {
+            callback();
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+          script.onload = function() {
+            const geocoderScript = document.createElement('script');
+            geocoderScript.src = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js';
+            geocoderScript.onload = callback;
+            document.head.appendChild(geocoderScript);
+          };
+          document.head.appendChild(script);
+          // CSS
+          const css1 = document.createElement('link');
+          css1.rel = 'stylesheet';
+          css1.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+          document.head.appendChild(css1);
+          const css2 = document.createElement('link');
+          css2.rel = 'stylesheet';
+          css2.href = 'https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css';
+          document.head.appendChild(css2);
+        }
+        loadMapboxScript(function() {
+          mapboxgl.accessToken = autocompleteApiKey;
+          const geocoder = new MapboxGeocoder({
+            accessToken: autocompleteApiKey,
+            types: 'address',
+            countries: 'us',
+            language: 'en',
+            placeholder: 'Enter your address',
+            mapboxgl: mapboxgl,
+          });
+          // Insertar el geocoder en el input
+          // Elimina geocoders previos
+          $(input).siblings('.mapboxgl-ctrl-geocoder').remove();
+          const tempDiv = document.createElement('div');
+          input.parentNode.insertBefore(tempDiv, input.nextSibling);
+          geocoder.addTo(tempDiv);
+          geocoder.on('result', function(e) {
+            if (e.result && e.result.geometry && e.result.geometry.coordinates) {
+              const lon = e.result.geometry.coordinates[0];
+              const lat = e.result.geometry.coordinates[1];
+              setLatLngFromAutocomplete(lat, lon);
+              $(input).val(e.result.place_name);
+            }
+          });
+          geocoder.on('clear', function() {
+            $(input).val('');
+          });
+        });
+      } else if (autocompleteProvider === 'algolia') {
+        function loadAlgoliaScript(callback) {
+          if (window.places) {
+            callback();
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/places.js@1.19.0';
+          script.async = true;
+          script.onload = callback;
+          document.head.appendChild(script);
+        }
+        loadAlgoliaScript(function() {
+          const tryInit = () => {
+            if (window.places) {
+              const placesAutocomplete = places({
+                container: input,
+                countries: ['us'],
+                language: 'en',
+              });
+              placesAutocomplete.on('change', function(e) {
+                if (e.suggestion && e.suggestion.latlng) {
+                  setLatLngFromAutocomplete(e.suggestion.latlng.lat, e.suggestion.latlng.lng);
+                  $(input).val(e.suggestion.value);
+                }
+              });
+              placesAutocomplete.on('clear', function() {
+                $(input).val('');
+              });
+            } else {
+              setTimeout(tryInit, 200);
+            }
+          };
+          tryInit();
+        });
+      }
+    }
+
+    // Inicializar autocompletado al cargar si el input está visible
+    if ($('#ewo-location-form-container').is(':visible')) {
+      initAddressAutocomplete();
+    }
+
+    // Re-inicializar autocompletado cada vez que se muestre el paso 1
+    window.showLocationSection = function() {
+      $(".ewo-section").removeClass("active");
+      $("#ewo-location-form-container").addClass("active");
+      if (window.ewoCurrentStep !== 1) {
+        setActiveStep(1);
+      }
+      if (map) {
+        setTimeout(function () {
+          map.invalidateSize();
+        }, 10);
+      }
+      // Inicializar autocompletado aquí también
+      initAddressAutocomplete();
+    };
   });
 
   /**
@@ -480,10 +680,33 @@
     }
 
     if (services.length === 0) {
-      showError(
-        "#ewo-services-error",
-        "No services available in your location at this time."
-      );
+      // Mensaje en inglés y editable
+      const noServicesMsg = `
+        <div class="ewo-no-services-message" style="padding:2rem;text-align:center;color:#c2185b;font-size:1.2rem;background:#fff3f7;border-radius:8px;max-width:600px;margin:2rem auto;">
+          <div style="font-size:2.2rem;margin-bottom:0.5rem;">😕</div>
+          <div style="margin-bottom:1rem;">Sorry, we couldn't find any services available for the selected location.</div>
+          <span style="color:#555;font-size:1rem;">Please try another address or try again later.</span>
+          <div style="margin-top:2rem;">
+            <button id="ewo-no-services-change-location" class="ewo-button ewo-button-secondary" style="font-size:1rem;padding:0.7em 2em;">Change location</button>
+          </div>
+        </div>
+      `;
+      $("#ewo-services-list").html(noServicesMsg);
+      $("#ewo-services-pagination").empty();
+      // Evento para el botón: limpiar input y lat/lng, pero NO restablecer columnas/perPage
+      $(document).off('click', '#ewo-no-services-change-location').on('click', '#ewo-no-services-change-location', function() {
+        $('#ewo-address-input').val('');
+        $('#ewo-latitude').val('');
+        $('#ewo-longitude').val('');
+        // Restablecer mapa y marcador a la posición inicial
+        if (typeof map !== 'undefined' && map && typeof marker !== 'undefined' && marker) {
+          const initialLat = 37.806479687628936;
+          const initialLng = -89.07903653069094;
+          map.setView([initialLat, initialLng], 13);
+          marker.setLatLng([initialLat, initialLng]);
+        }
+        if (typeof showLocationSection === 'function') showLocationSection();
+      });
       return;
     }
 
@@ -645,7 +868,9 @@
   function showLocationSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-location-form-container").addClass("active");
-    setActiveStep(1);
+    if (window.ewoCurrentStep !== 1) {
+      setActiveStep(1);
+    }
     if (map) {
       setTimeout(function () {
         map.invalidateSize();
@@ -656,35 +881,48 @@
   function showServicesSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-available-services-section").addClass("active");
-    setActiveStep(2);
+    if (window.ewoCurrentStep !== 2) {
+      setActiveStep(2);
+    }
   }
 
   function showAddonsSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-addons-container").addClass("active");
-    setActiveStep(3);
+    if (window.ewoCurrentStep !== 3) {
+      setActiveStep(3);
+    }
   }
 
   function showUserSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-user-container").addClass("active");
-    setActiveStep(4);
+    if (window.ewoCurrentStep !== 4) {
+      setActiveStep(4);
+    }
   }
 
   function showConfirmationSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-confirmation-container").addClass("active");
-    setActiveStep(5);
+    if (window.ewoCurrentStep !== 5) {
+      setActiveStep(5);
+    }
   }
 
-  // Renderizar pasos personalizados
+  // --- MULTISTEP LOGIC RESTAURADA ---
+  // Renderizar pasos personalizados SOLO en la carga inicial y desde setActiveStep
   function renderCustomSteps() {
     const $stepsOl = $('#ewo-form-steps');
     const $stepsProgress = $('#ewo-form-steps-progress');
     const opts = window.ewoServiceListingOptions || {};
     const size = opts.step_size ? parseInt(opts.step_size, 10) : 32;
     const showLabels = opts.show_step_labels === 'yes';
-    const iconType = opts.step_icon_type || 'dashicons';
+    // Lógica corregida: si es vacío, null, undefined o distinto de 'dashicons'/'svg', mostrar números
+    let iconType = 'none';
+    if (opts.step_icon_type === 'dashicons' || opts.step_icon_type === 'svg') {
+      iconType = opts.step_icon_type;
+    }
     const style = opts.form_steps_style || 'progress_bar';
     const activeColor = opts.step_active_color || '#c2185b';
     const inactiveColor = opts.step_inactive_color || '#e5e1e1';
@@ -694,11 +932,10 @@
     if (style === 'circles') {
       $stepsOl.show();
       $stepsProgress.hide();
-      // ... render de círculos en <ol> como antes ...
+      // Aquí va el render de círculos clásico (no manipular desde autocompletado)
     } else if (style === 'progress_bar') {
       $stepsOl.hide();
       $stepsProgress.show();
-      // Renderizar barra de progreso
       let iconsHtml = '<div class="ewo-progress-icons" style="display:flex;justify-content:space-between;margin-bottom:6px;">';
       for (let i = 1; i <= totalSteps; i++) {
         let iconHtml = '';
@@ -720,7 +957,6 @@
         iconsHtml += '<span class="ewo-progress-icon ' + iconClass + '" style="flex:1;text-align:center;">' + iconHtml + '</span>';
       }
       iconsHtml += '</div>';
-      // Labels
       let labelsHtml = '<div class="ewo-progress-labels" style="display:flex;justify-content:space-between;margin-bottom:6px;">';
       for (let i = 1; i <= totalSteps; i++) {
         const label = opts['step_label_' + i] || $stepsOl.find('.ewo-step').eq(i-1).text().replace(/^\d+\.?\s*/, '');
@@ -728,20 +964,16 @@
         labelsHtml += '<span class="ewo-progress-label ' + activeClass + '" style="flex:1;text-align:center;font-size:0.98em;padding:0 4px;min-width:60px;white-space:nowrap;">' + label + '</span>';
       }
       labelsHtml += '</div>';
-      // Barra de fondo y relleno
       let barHtml = '<div class="ewo-progress-bar-bg" style="position:relative;height:10px;border-radius:5px;background:var(--ewo-inactive-bg,#eee);overflow:hidden;">';
       const percent = (activeStep/totalSteps)*100;
       barHtml += '<div class="ewo-progress-bar-fill" style="position:absolute;left:0;top:0;height:100%;width:' + percent + '%;background:var(--ewo-active-color,#c2185b);transition:width 0.5s cubic-bezier(.4,0,.2,1);"></div>';
       barHtml += '</div>';
-      // Renderizar en el div
       $stepsProgress.html(iconsHtml + barHtml + labelsHtml);
     }
     $('#ewo-form-steps, #ewo-form-steps-progress').addClass('ewo-steps-ready');
   }
-
-  // Llama a renderCustomSteps al cargar y cada vez que cambie el paso
+  // Solo llamar a renderCustomSteps aquí y desde setActiveStep
   renderCustomSteps();
-
   function setActiveStep(step) {
     window.ewoCurrentStep = step;
     $('#ewo-form-steps .ewo-step').removeClass('active');
