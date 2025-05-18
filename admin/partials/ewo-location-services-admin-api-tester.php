@@ -20,18 +20,26 @@ $current_environment = isset($options['api_environment']) ? $options['api_enviro
 // Obtener las URLs de los endpoints disponibles
 $available_endpoints = array();
 
-// getServiceableLocationsByLatLng
-$latlng_dev_url = isset($options['dev_get_serviceable_locations_by_latlng_url']) ? $options['dev_get_serviceable_locations_by_latlng_url'] : '';
-$latlng_prod_url = isset($options['prod_get_serviceable_locations_by_latlng_url']) ? $options['prod_get_serviceable_locations_by_latlng_url'] : '';
-if (!empty($latlng_dev_url) || !empty($latlng_prod_url)) {
-    $available_endpoints['getServiceableLocationsByLatLng'] = __('Get Serviceable Locations By Lat/Lng', 'ewo-location-services');
-}
+$endpoint_types = array(
+    'get_serviceability_details' => __('Get Serviceability Details', 'ewo-location-services'),
+    'get_serviceable_locations_by_latlng' => __('Get Serviceable Locations By Lat/Lng', 'ewo-location-services'),
+    'get_packages' => __('Get Packages', 'ewo-location-services'),
+    'get_discount_templates' => __('Get Discount Templates', 'ewo-location-services'),
+    'add_package_to_parent' => __('Add Package To Parent', 'ewo-location-services'),
+    'create_customer' => __('Create Customer', 'ewo-location-services'),
+    'update_customer' => __('Update Customer', 'ewo-location-services'),
+    'create_customer_comment' => __('Create Customer Comment', 'ewo-location-services'),
+    'create_opportunity' => __('Create Opportunity', 'ewo-location-services'),
+    'update_opportunity' => __('Update Opportunity', 'ewo-location-services'),
+    'get_opportunity' => __('Get Opportunity', 'ewo-location-services'),
+);
 
-// getServiceabilityDetails
-$details_dev_url = isset($options['dev_get_serviceability_details_url']) ? $options['dev_get_serviceability_details_url'] : '';
-$details_prod_url = isset($options['prod_get_serviceability_details_url']) ? $options['prod_get_serviceability_details_url'] : '';
-if (!empty($details_dev_url) || !empty($details_prod_url)) {
-    $available_endpoints['getServiceabilityDetails'] = __('Get Serviceability Details', 'ewo-location-services');
+foreach ($endpoint_types as $key => $label) {
+    $dev_key = 'dev_' . $key . '_url';
+    $prod_key = 'prod_' . $key . '_url';
+    if (!empty($options[$dev_key]) || !empty($options[$prod_key])) {
+        $available_endpoints[$key] = $label;
+    }
 }
 
 // API Key

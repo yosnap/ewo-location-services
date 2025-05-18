@@ -130,16 +130,6 @@ class Ewo_Location_Services_Admin {
             $this->plugin_name . '-api-tester',
             array($this, 'display_plugin_api_tester_page')
         );
-        
-        // Submenú para el modo de prueba de Autenticación API
-        add_submenu_page(
-            $this->plugin_name,
-            __('API Auth Tester', 'ewo-location-services'),
-            __('API Auth Tester', 'ewo-location-services'),
-            'manage_options',
-            $this->plugin_name . '-api-auth-tester',
-            array($this, 'display_plugin_api_auth_tester_page')
-        );
 
         // Add Service Listing Settings submenu
         add_submenu_page(
@@ -177,15 +167,6 @@ class Ewo_Location_Services_Admin {
      */
     public function display_plugin_api_tester_page() {
         include_once 'partials/ewo-location-services-admin-api-tester.php';
-    }
-    
-    /**
-     * Renderiza la página de prueba de autenticación API.
-     *
-     * @since    1.0.0
-     */
-    public function display_plugin_api_auth_tester_page() {
-        include_once 'partials/ewo-location-services-admin-api-auth-tester.php';
     }
 
     public function display_service_listing_settings_page() {
@@ -315,19 +296,6 @@ class Ewo_Location_Services_Admin {
             'api_key',
             __('API Key', 'ewo-location-services'),
             array($this, 'settings_field_api_key_cb'),
-            'ewo_location_services_options',
-            'ewo_location_services_general'
-        );
-
-        // Switch para activar/desactivar logs
-        add_settings_field(
-            'logging_enabled',
-            __('Enable Logging', 'ewo-location-services'),
-            function() {
-                $opts = get_option('ewo_location_services_options');
-                $val = isset($opts['logging_enabled']) ? $opts['logging_enabled'] : 'yes';
-                echo '<label><input type="checkbox" name="ewo_location_services_options[logging_enabled]" value="yes"' . checked($val, 'yes', false) . '> ' . __('Enable plugin logging (recommended for debugging)', 'ewo-location-services') . '</label>';
-            },
             'ewo_location_services_options',
             'ewo_location_services_general'
         );
@@ -1375,51 +1343,33 @@ class Ewo_Location_Services_Admin {
     public function handle_api_test() {
         // Verificar nonce para seguridad
         check_ajax_referer('ewo_api_tester_nonce', 'nonce');
-        
         // Verificar permisos
         if (!current_user_can('manage_options')) {
             wp_send_json_error(array('message' => __('You do not have sufficient permissions.', 'ewo-location-services')));
         }
-        
         // Obtener parámetros
         $latitude = isset($_POST['latitude']) ? sanitize_text_field($_POST['latitude']) : '';
         $longitude = isset($_POST['longitude']) ? sanitize_text_field($_POST['longitude']) : '';
         $endpoint_type = isset($_POST['endpoint_type']) ? sanitize_text_field($_POST['endpoint_type']) : '';
         $environment = isset($_POST['environment']) ? sanitize_text_field($_POST['environment']) : 'development';
-
         // Validar parámetros
         if (empty($latitude) || empty($longitude) || empty($endpoint_type)) {
             wp_send_json_error(array('message' => __('All fields are required.', 'ewo-location-services')));
         }
-
         // Registrar la solicitud
         $this->logger->info(sprintf('API Test request: endpoint=%s, environment=%s, lat=%s, lng=%s', 
             $endpoint_type, $environment, $latitude, $longitude));
-
         // Obtener opciones y configuración del API
         $options = get_option('ewo_location_services_options');
         $api_key = isset($options['api_key']) ? $options['api_key'] : '';
-        
-        // Determinar la URL del endpoint basada en el entorno y el tipo
-        $api_url = '';
-        $endpoint_option = '';
-        
-        if ($endpoint_type === 'getServiceableLocationsByLatLng') {
-            $endpoint_option = $environment === 'development' ? 'dev_get_serviceable_locations_by_latlng_url' : 'prod_get_serviceable_locations_by_latlng_url';
-        } elseif ($endpoint_type === 'getServiceabilityDetails') {
-            $endpoint_option = $environment === 'development' ? 'dev_get_serviceability_details_url' : 'prod_get_serviceability_details_url';
-        } else {
-            wp_send_json_error(array('message' => __('Invalid endpoint selected.', 'ewo-location-services')));
-        }
-        
-        $api_url = isset($options[$endpoint_option]) ? $options[$endpoint_option] : '';
-        
-        // Verificar que tenemos una URL de API
+        // Construir la key final igual que en el frontend
+        $prefix = $environment === 'development' ? 'dev_' : 'prod_';
+        $key = $prefix . $endpoint_type . '_url';
+        $api_url = isset($options[$key]) ? $options[$key] : '';
         if (empty($api_url)) {
-            $this->logger->error('API URL not configured for endpoint: ' . $endpoint_type . ' in environment: ' . $environment);
+            $this->logger->error('API URL not configured for endpoint: ' . $key);
             wp_send_json_error(array('message' => __('API endpoint URL not configured.', 'ewo-location-services')));
         }
-
         // Preparar los argumentos para la solicitud a la API
         $args = array(
             'headers' => array(
@@ -1429,33 +1379,27 @@ class Ewo_Location_Services_Admin {
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'requesting_system' => 'website',
-                'api-key' => $api_key  // Formato correcto con guion
+                'api-key' => $api_key
             )),
             'method' => 'POST',
             'timeout' => 45,
             'data_format' => 'body'
         );
-
         // Realizar la solicitud a la API
         $response = wp_remote_post($api_url, $args);
-
         // Registrar la respuesta
-        $this->logger->info('API Test Response received for endpoint: ' . $endpoint_type);
-
+        $this->logger->info('API Test Response received for endpoint: ' . $key);
         // Verificar si hubo un error en la solicitud
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
             $this->logger->error('API Test Request failed: ' . $error_message);
             wp_send_json_error(array('message' => __('Could not connect to service API: ', 'ewo-location-services') . $error_message));
         }
-
         // Obtener el código de respuesta HTTP
         $response_code = wp_remote_retrieve_response_code($response);
-        
         // Obtener el cuerpo de la respuesta y decodificar JSON
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
-
         // Añadir información de depuración para administradores
         $debug_data = array(
             'request_url' => $api_url,
@@ -1463,26 +1407,23 @@ class Ewo_Location_Services_Admin {
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'requesting_system' => 'website',
-                'api-key' => substr($api_key, 0, 4) . '****' // Mostrar solo primeros 4 caracteres por seguridad
+                'api-key' => substr($api_key, 0, 4) . '****'
             ),
             'response_status' => $response_code,
             'response_headers' => wp_remote_retrieve_headers($response),
             'timestamp' => current_time('mysql')
         );
-
         // Verificar si la respuesta es válida
-        if (empty($data) && $response_code !== 204) { // 204 = No Content, podría ser válido en algunos casos
-            $this->logger->error('Invalid API response format for endpoint: ' . $endpoint_type);
+        if (empty($data) && $response_code !== 204) {
+            $this->logger->error('Invalid API response format for endpoint: ' . $key);
             wp_send_json_error(array(
                 'message' => __('Received invalid response from API.', 'ewo-location-services'),
                 'raw_response' => $body,
                 'debug' => $debug_data
             ));
         }
-
         // Registrar la respuesta completa para depuración adicional
-        $this->logger->debug('API Test successful for endpoint: ' . $endpoint_type);
-
+        $this->logger->debug('API Test successful for endpoint: ' . $key);
         // Enviar la respuesta procesada
         wp_send_json_success(array(
             'message' => sprintf(__('API test successful. Response code: %d', 'ewo-location-services'), $response_code),
@@ -1498,5 +1439,17 @@ if (is_admin()) {
         $logger = new Ewo_Location_Services_Logger();
         $admin = new Ewo_Location_Services_Admin('ewo-location-services', defined('EWO_LOCATION_SERVICES_VERSION') ? EWO_LOCATION_SERVICES_VERSION : '1.0.0', $logger);
         $admin->handle_log_clear();
+    });
+    // Handler para guardar logging_enabled desde la página de logs
+    add_action('admin_post_ewo_save_logging_settings', function() {
+        if (!current_user_can('manage_options')) {
+            wp_die('Unauthorized');
+        }
+        check_admin_referer('ewo_save_logging_settings', 'ewo_save_logging_settings_nonce');
+        $opts = get_option('ewo_location_services_options', array());
+        $opts['logging_enabled'] = isset($_POST['logging_enabled']) && $_POST['logging_enabled'] === 'yes' ? 'yes' : 'no';
+        update_option('ewo_location_services_options', $opts);
+        wp_redirect(admin_url('admin.php?page=ewo-location-services-logs&logging_saved=1'));
+        exit;
     });
 }

@@ -38,6 +38,20 @@ $logging_enabled = isset($opts['logging_enabled']) ? $opts['logging_enabled'] : 
 
 <div class="wrap">
     <h1><?php echo esc_html(get_admin_page_title()); ?> - <?php _e('Logs', 'ewo-location-services'); ?></h1>
+    <?php if (isset($_GET['logging_saved']) && $_GET['logging_saved'] == 1): ?>
+    <div class="notice notice-success is-dismissible">
+        <p>Logging settings saved successfully.</p>
+    </div>
+    <?php endif; ?>
+    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="margin-bottom:1.5em;">
+        <?php wp_nonce_field('ewo_save_logging_settings', 'ewo_save_logging_settings_nonce'); ?>
+        <input type="hidden" name="action" value="ewo_save_logging_settings">
+        <label style="font-size:1.1em;font-weight:500;">
+            <input type="checkbox" name="logging_enabled" value="yes" <?php checked($logging_enabled, 'yes'); ?>>
+            <?php _e('Enable plugin logging (recommended for debugging)', 'ewo-location-services'); ?>
+        </label>
+        <button type="submit" class="button button-primary" style="margin-left:1em;">Save Changes</button>
+    </form>
     <?php if ($logging_enabled !== 'yes'): ?>
     <div class="notice notice-warning" style="border-left:4px solid #d63638; background:#fff3f3;">
         <p><strong>Logging is currently disabled.</strong> No new log entries will be recorded until you enable logging in the plugin settings.</p>
