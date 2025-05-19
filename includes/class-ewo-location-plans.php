@@ -51,7 +51,10 @@ class Ewo_Location_Plans {
         if ($latitude) $payload['latitude'] = $latitude;
         if ($longitude) $payload['longitude'] = $longitude;
         $response = wp_remote_post($api_url, [
-            'body' => $payload,
+            'body'    => json_encode($payload),
+            'headers' => [
+                'Content-Type' => 'application/json',
+            ],
             'timeout' => 15,
         ]);
         if (is_wp_error($response)) {

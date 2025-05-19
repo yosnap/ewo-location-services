@@ -17,7 +17,10 @@
    * @param {function} callback Opcional, se llama tras renderizar
    */
   window.ewoGetPlansForCoverage = function(coverageCode, callback) {
-    $('#ewo-plan-list').html('<div class="ewo-loading"><span class="ewo-spinner"></span> Loading plans...</div>');
+    const latitude = localStorage.getItem('ewo_latitude') || $('#ewo-latitude').val();
+    const longitude = localStorage.getItem('ewo_longitude') || $('#ewo-longitude').val();
+    localStorage.setItem('ewo_coverage_code', coverageCode);
+    window.ewoShowPreloader('Loading plans...');
     showPlanSection();
     $.ajax({
       url: ewoLocationServices.ajax_url,
@@ -25,20 +28,23 @@
       data: {
         action: 'ewo_get_packages',
         nonce: ewoLocationServices.nonce,
-        coverage_code: coverageCode
+        coverage_code: coverageCode,
+        latitude: latitude,
+        longitude: longitude
       },
       success: function(response) {
-        console.log('Respuesta AJAX getPackages:', response);
-        if (response.success && response.data && Array.isArray(response.data.packages)) {
+        if (response.success && response.data && Array.isArray(response.data.packages) && response.data.packages.length > 0) {
           renderPlans(response.data.packages);
           window.ewoAvailableAddons = response.data.addons || [];
           if (typeof callback === 'function') callback(response.data);
         } else {
-          $('#ewo-plan-list').html('<div class="ewo-error">Sorry, there are no plans available for the selected service or location.<br>Please try another option or contact support if you believe this is an error.</div>');
+          $('#ewo-plan-list').html('<div class="ewo-error">No plans available for this location/service.</div>');
         }
+        window.ewoHidePreloader();
       },
       error: function() {
         $('#ewo-plan-list').html('<div class="ewo-error">Error loading plans. Please try again.</div>');
+        window.ewoHidePreloader();
       }
     });
   };
@@ -69,30 +75,6 @@
       window.ewoSelectedPlan = JSON.parse(planStr);
     });
   }
-
-  /**
-   * Renderiza los addons disponibles en el paso correspondiente
-   * @param {Array} addons
-   */
-  window.ewoRenderAddons = function(addons) {
-    let html = '';
-    if (!addons || !addons.length) {
-      html = '<div class="ewo-no-addons">No addons available for this plan.</div>';
-    } else {
-      html = '<div class="ewo-addon-options">';
-      addons.forEach(function(addon, idx) {
-        html += `<div class="ewo-addon-item">
-          <input type="checkbox" class="ewo-addon-select" id="ewo-addon-${idx}" value="${addon.plan_id}">
-          <label for="ewo-addon-${idx}">
-            <strong>${addon.plan_name || 'Addon'}</strong> - $${addon.price || '0.00'}<br>
-            <span>${addon.plan_description || ''}</span>
-          </label>
-        </div>`;
-      });
-      html += '</div>';
-    }
-    $('#ewo-addon-list').html(html);
-  };
 
   /**
    * Muestra el paso de planes (puede ser redefinido por el multistep principal)

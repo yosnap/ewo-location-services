@@ -97,8 +97,17 @@ class Ewo_Location_Services_Frontend {
         // Scripts para Leaflet (si usamos OpenStreetMap)
         wp_enqueue_script($this->plugin_name . '-leaflet', 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js', array(), '1.7.1', false);
 
+        // Encolar el JS de location (nuevo, debe ir primero)
+        wp_enqueue_script($this->plugin_name . '-location', plugin_dir_url(__FILE__) . 'js/ewo-location-location.js', array('jquery'), $this->version, true);
+
         // Encolar el JS de planes/addons
         wp_enqueue_script($this->plugin_name . '-plans', plugin_dir_url(__FILE__) . 'js/ewo-location-plans.js', array('jquery', $this->plugin_name), $this->version, true);
+
+        // Encolar el JS de addons (nuevo)
+        wp_enqueue_script($this->plugin_name . '-addons', plugin_dir_url(__FILE__) . 'js/ewo-location-addons.js', array('jquery', $this->plugin_name . '-plans', $this->plugin_name), $this->version, true);
+
+        // Encolar el JS de usuario (nuevo)
+        wp_enqueue_script($this->plugin_name . '-user', plugin_dir_url(__FILE__) . 'js/ewo-location-user.js', array('jquery', $this->plugin_name . '-addons', $this->plugin_name . '-plans', $this->plugin_name), $this->version, true);
 
         // Forzar carga de jQuery UI Autocomplete y CSS
         wp_enqueue_script('jquery-ui-core');

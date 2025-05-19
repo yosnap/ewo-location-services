@@ -182,6 +182,23 @@ if (!defined('ABSPATH')) {
             </div>
             <?php endif; ?>
             
+            <div class="ewo-form-group">
+                <label for="ewo-address-line-one"><?php _e('Address', 'ewo-location-services'); ?></label>
+                <input type="text" id="ewo-address-line-one" name="address_line_one" class="ewo-input" required>
+            </div>
+            <div class="ewo-form-group">
+                <label for="ewo-city"><?php _e('City', 'ewo-location-services'); ?></label>
+                <input type="text" id="ewo-city" name="city" class="ewo-input" required>
+            </div>
+            <div class="ewo-form-group">
+                <label for="ewo-state"><?php _e('State', 'ewo-location-services'); ?></label>
+                <input type="text" id="ewo-state" name="state" class="ewo-input" required>
+            </div>
+            <div class="ewo-form-group">
+                <label for="ewo-zip"><?php _e('ZIP', 'ewo-location-services'); ?></label>
+                <input type="text" id="ewo-zip" name="zip" class="ewo-input" required>
+            </div>
+            
             <input type="hidden" id="ewo-selected-service" name="service_id" value="">
             <div id="ewo-selected-addons-container"></div>
             

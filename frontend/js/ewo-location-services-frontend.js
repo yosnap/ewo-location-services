@@ -396,6 +396,25 @@
       submitOpportunity();
     });
 
+    // Avanzar del paso de planes al de usuario
+    $(document).on('click', '#ewo-continue-to-user', function(e) {
+      e.preventDefault();
+      if (typeof showUserSection === 'function') showUserSection();
+    });
+
+    // Avanzar del paso de usuario al de addons
+    $(document).on('click', '#ewo-continue-to-addons', function(e) {
+      e.preventDefault();
+      $('.ewo-section').removeClass('active');
+      $('#ewo-addons-container').addClass('active');
+      setActiveStep(5);
+      // Renderizar addons y mostrar en consola
+      if (window.ewoRenderAddons && window.ewoAvailableAddons) {
+        window.ewoRenderAddons(window.ewoAvailableAddons);
+        console.log('Addons disponibles:', window.ewoAvailableAddons);
+      }
+    });
+
     function submitOpportunity() {
       const user = {
         first_name: $('#ewo-user-first-name').val(),
@@ -888,7 +907,19 @@
   function showUserSection() {
     $(".ewo-section").removeClass("active");
     $("#ewo-user-container").addClass("active");
-    setActiveStep(5);
+    setActiveStep(4);
+    // Prellenar dirección si structuredAddress está disponible
+    let addr = structuredAddress;
+    if (!addr || !addr.address_line_one) {
+      // Intentar restaurar de localStorage si structuredAddress no está definido
+      try {
+        addr = JSON.parse(localStorage.getItem('ewo_structured_address')) || {};
+      } catch (e) { addr = {}; }
+    }
+    $('#ewo-address-line-one').val(addr.address_line_one || '');
+    $('#ewo-city').val(addr.city || '');
+    $('#ewo-state').val(addr.state || '');
+    $('#ewo-zip').val(addr.zip || '');
   }
 
   function showConfirmationSection() {
@@ -1520,55 +1551,85 @@
     }
   }
 
-  // Extraer dirección estructurada de Nominatim (o Google, Mapbox, etc.)
+  // --- Sincronización de dirección estructurada ---
+  function updateStructuredAddress(addr) {
+    structuredAddress = {
+      address_line_one: addr.address_line_one || '',
+      city: addr.city || '',
+      state: addr.state || '',
+      zip: addr.zip || ''
+    };
+    localStorage.setItem('ewo_structured_address', JSON.stringify(structuredAddress));
+  }
+
+  // Al cargar, intentar restaurar de localStorage
+  if (localStorage.getItem('ewo_structured_address')) {
+    try {
+      structuredAddress = JSON.parse(localStorage.getItem('ewo_structured_address'));
+    } catch (e) {}
+  }
+
+  // Modificar extractStructuredAddressFromNominatim para usar updateStructuredAddress
   function extractStructuredAddressFromNominatim(data) {
     if (!data || !data.address) return;
-    structuredAddress.address_line_one = (data.address.road || '') + (data.address.house_number ? ' ' + data.address.house_number : '');
-    structuredAddress.city = data.address.city || data.address.town || data.address.village || '';
-    structuredAddress.state = data.address.state || '';
-    structuredAddress.zip = data.address.postcode || '';
+    const addr = {
+      address_line_one: (data.address.road || '') + (data.address.house_number ? ' ' + data.address.house_number : ''),
+      city: data.address.city || data.address.town || data.address.village || '',
+      state: data.address.state || '',
+      zip: data.address.postcode || ''
+    };
+    updateStructuredAddress(addr);
   }
 
   // Reemplazar preloader en envío de usuario
   function submitUserForm(e) {
     e.preventDefault();
-    // ... validaciones ...
     window.ewoShowPreloader('Processing user data...');
-    // ...
+    // Recoger datos del formulario y localStorage
+    const form = $('#ewo-user-form');
+    const data = {
+      action: 'ewo_create_customer',
+      nonce: ewoLocationServices.nonce,
+      first_name: $('#ewo-user-first-name').val(),
+      last_name: $('#ewo-user-last-name').val(),
+      type: 'person',
+      subtype: 'residential',
+      company_name: 'Wisper ISP',
+      mobile_number: $('#ewo-user-mobile').val(),
+      email: $('#ewo-user-email').val(),
+      address_line_one: $('#ewo-address-line-one').val() || '',
+      city: $('#ewo-city').val() || '',
+      state: $('#ewo-state').val() || '',
+      zip: $('#ewo-zip').val() || '',
+      ad_source: $('#ewo-ad-source').val() || '',
+      added_by: $('#ewo-added-by').val() || '',
+      support_pin: $('#ewo-support-pin').val() || '',
+      status: 'new',
+      address_line_two: $('#ewo-address-line-two').val() || '',
+      lat: $('#ewo-latitude').val() || '',
+      lng: $('#ewo-longitude').val() || '',
+      text_messages_for_operational_alerts: $('#ewo-text-messages-for-operational-alerts').val() || '',
+      email_messages_for_operational_alerts: $('#ewo-email-messages-for-operational-alerts').val() || '',
+      email_messages_for_wisper_news: $('#ewo-email-messages-for-wisper-news').val() || '',
+      subscribe_to_text_payments: $('#ewo-subscribe-to-text-payments').val() || ''
+    };
     $.ajax({
       url: ewoLocationServices.ajax_url,
-      type: "POST",
-      data: formData,
-      success: function (response) {
+      type: 'POST',
+      data: data,
+      success: function(response) {
         window.ewoHidePreloader();
-        lastApiResponse = response;
+        console.log('Respuesta createCustomer:', response);
         if (response.success) {
           showConfirmationSection();
-          if (response.data && response.data.redirect) {
-            setTimeout(function () {
-              window.location.href = response.data.redirect;
-            }, 3000);
-          }
         } else {
-          const errorMessage =
-            response.data && response.data.message
-              ? response.data.message
-              : "Error processing your registration. Please try again.";
-          showError("#ewo-user-error", errorMessage);
+          showError('#ewo-user-error', response.data && response.data.message ? response.data.message : 'Error creating customer.');
         }
       },
-      error: function () {
+      error: function() {
         window.ewoHidePreloader();
-        showError(
-          "#ewo-user-error",
-          "Error connecting to the server. Please check your internet connection and try again."
-        );
-      },
-      complete: function () {
-        window.ewoHidePreloader();
-        $submitButton.prop("disabled", false);
-        $submitButton.text(originalButtonText);
-      },
+        showError('#ewo-user-error', 'Error connecting to the server. Please try again.');
+      }
     });
   }
 })(jQuery);

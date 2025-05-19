@@ -18,6 +18,9 @@ class Ewo_Location_User {
         // Registrar handler AJAX para registro de usuario
         add_action('wp_ajax_ewo_submit_user', array($this, 'handle_user_submission'));
         add_action('wp_ajax_nopriv_ewo_submit_user', array($this, 'handle_user_submission'));
+        // Nuevo: handler para crear cliente externo
+        add_action('wp_ajax_ewo_create_customer', array($this, 'handle_create_customer'));
+        add_action('wp_ajax_nopriv_ewo_create_customer', array($this, 'handle_create_customer'));
     }
 
     /**
@@ -170,5 +173,52 @@ class Ewo_Location_User {
             'user_id' => $user_id,
             'redirect' => home_url()
         ));
+    }
+
+    /**
+     * Handler AJAX para crear cliente en el endpoint externo (NO crea usuario WP)
+     */
+    public function handle_create_customer() {
+        check_ajax_referer('ewo_location_services_nonce', 'nonce');
+        $fields = [
+            'first_name', 'last_name', 'type', 'subtype', 'company_name', 'mobile_number', 'email',
+            'address_line_one', 'city', 'state', 'zip', 'ad_source', 'added_by', 'support_pin',
+            'status', 'address_line_two', 'lat', 'lng',
+            'text_messages_for_operational_alerts', 'email_messages_for_operational_alerts',
+            'email_messages_for_wisper_news', 'subscribe_to_text_payments'
+        ];
+        $payload = [];
+        foreach ($fields as $field) {
+            $payload[$field] = isset($_POST[$field]) ? sanitize_text_field($_POST[$field]) : '';
+        }
+        // Obtener API key y endpoint desde opciones
+        $options = get_option('ewo_location_services_options');
+        $environment = isset($options['api_environment']) ? $options['api_environment'] : 'development';
+        $api_key = isset($options['api_key']) ? $options['api_key'] : '';
+        $api_url = '';
+        if ($environment === 'development') {
+            $api_url = isset($options['dev_create_customer_url']) ? $options['dev_create_customer_url'] : '';
+        } else {
+            $api_url = isset($options['prod_create_customer_url']) ? $options['prod_create_customer_url'] : '';
+        }
+        if (empty($api_key) || empty($api_url)) {
+            wp_send_json_error(['message' => 'API configuration missing']);
+        }
+        $payload['api-key'] = $api_key;
+        // Enviar petición a la API externa
+        $response = wp_remote_post($api_url, [
+            'body'    => json_encode($payload),
+            'headers' => [ 'Content-Type' => 'application/json' ],
+            'timeout' => 30,
+        ]);
+        if (is_wp_error($response)) {
+            wp_send_json_error(['message' => 'API connection error']);
+        }
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+        if (empty($data['success'])) {
+            wp_send_json_error(['message' => $data['message'] ?? 'API error', 'api_response' => $data]);
+        }
+        wp_send_json_success(['api_response' => $data]);
     }
 } 
