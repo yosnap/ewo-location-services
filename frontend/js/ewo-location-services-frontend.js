@@ -432,43 +432,85 @@
         mobile_number: $('#ewo-user-mobile').val()
       };
       const serviceId = $('#ewo-selected-service').val();
-      const addons = [];
-      $('.ewo-addon-select:checked').each(function() {
-        addons.push($(this).val());
-      });
-      const lat = $('#ewo-latitude').val();
-      const lng = $('#ewo-longitude').val();
-      // Serviceability results JSON (de la última respuesta de la API de servicios)
+      // --- Recoger datos para los JSON requeridos ---
+      // 1. Serviceability results
       let serviceabilityResults = null;
       if (lastApiResponse && lastApiResponse.data && lastApiResponse.data.services) {
         serviceabilityResults = lastApiResponse.data.services;
       } else if (lastApiResponse && lastApiResponse.data && lastApiResponse.data.raw_response && lastApiResponse.data.raw_response.serviceableLocations) {
         serviceabilityResults = lastApiResponse.data.raw_response.serviceableLocations;
       }
-      // Preparar datos para AJAX
+      // 2. Plan seleccionado
+      let selectedPlan = null;
+      try {
+        selectedPlan = window.ewoSelectedPlan || JSON.parse(localStorage.getItem('ewo_selected_plan'));
+      } catch (e) { selectedPlan = null; }
+      // 3. Addons seleccionados
+      let selectedAddons = [];
+      try {
+        selectedAddons = window.ewoAvailableAddons.filter(function(addon) {
+          const selected = (JSON.parse(localStorage.getItem('ewo_selected_addons')) || []);
+          return selected.includes(String(addon.plan_id));
+        });
+      } catch (e) { selectedAddons = []; }
+      // 4. Filtrar addons por tipo
+      const recurringAddons = selectedAddons.filter(a => a.type === 'recurring_service');
+      const voiceAddons = selectedAddons.filter(a => a.type === 'voice_service');
+      // --- Preparar datos para AJAX ---
       const data = {
         action: 'ewo_create_opportunity',
         nonce: ewoLocationServices.nonce,
         user,
         service_id: serviceId,
-        addons,
-        latitude: lat,
-        longitude: lng,
+        latitude: $('#ewo-latitude').val(),
+        longitude: $('#ewo-longitude').val(),
         address_line_one: structuredAddress.address_line_one,
         city: structuredAddress.city,
         state: structuredAddress.state,
         zip: structuredAddress.zip,
-        serviceability_results_json: serviceabilityResults ? JSON.stringify(serviceabilityResults) : ''
+        // --- JSON requeridos ---
+        serviceability_results_json: serviceabilityResults ? JSON.stringify(serviceabilityResults) : '',
+        selected_internet_plans_json: selectedPlan ? JSON.stringify([selectedPlan]) : '[]',
+        selected_recurring_addons_json: JSON.stringify(recurringAddons),
+        selected_voice_addons_json: JSON.stringify(voiceAddons)
       };
+      // DEPURACIÓN: Mostrar el valor real antes de enviar
+      try {
+        const parsed = serviceabilityResults ? serviceabilityResults : [];
+        console.log('serviceability_results_json a enviar:', parsed);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          alert('ADVERTENCIA: El campo serviceability_results_json está vacío o no es un array. El pedido puede no ser válido.');
+        }
+      } catch (e) { console.warn('No se pudo depurar serviceability_results_json', e); }
+      // Guardar datos seleccionados en localStorage antes de enviar
+      try {
+        if (window.selectedPlan) {
+          localStorage.setItem('ewo_selected_plan', JSON.stringify(window.selectedPlan));
+        }
+        if (window.selectedRecurringAddons) {
+          localStorage.setItem('ewo_selected_recurring_addons', JSON.stringify(window.selectedRecurringAddons));
+        }
+        if (window.selectedVoiceAddons) {
+          localStorage.setItem('ewo_selected_voice_addons', JSON.stringify(window.selectedVoiceAddons));
+        }
+      } catch (e) {}
       $.ajax({
         url: ewoLocationServices.ajax_url,
         type: 'POST',
         data: data,
         success: function(response) {
           console.log('Opportunity response:', response);
+          if (response.success) {
+            showConfirmationSection();
+            if (typeof window.showOpportunitySummary === 'function') {
+              window.showOpportunitySummary(response);
+            }
+          } else {
+            showError('#ewo-user-error', response.data && response.data.message ? response.data.message : 'Error creating opportunity.');
+          }
         },
-        error: function(xhr, status, error) {
-          console.error('Error creating opportunity:', error);
+        error: function() {
+          showError('#ewo-user-error', 'Error connecting to the server. Please try again.');
         }
       });
     }
@@ -869,8 +911,7 @@
    */
   function selectService() {
     const serviceId = $(this).data("service-id");
-    const $serviceItem = $(this).closest(".ewo-service-item");
-    const serviceDataStr = $serviceItem.attr("data-service-json");
+    const serviceDataStr = $(this).attr("data-service-json");
     try {
       selectedService = JSON.parse(serviceDataStr);
       $("#ewo-selected-service").val(serviceId);
@@ -1381,19 +1422,20 @@
   function renderServiceControls(total) {
     const $container = $('#ewo-services-controls');
     $container.empty();
-    // Contador
-    $container.append(`<div class="ewo-services-count">${total} service${total === 1 ? '' : 's'} found</div>`);
-    // Filtros (si está activado)
+    // Filtros en fila aparte si existen
     if (SHOW_FILTERS) {
-      $container.append(`
+      if ($('#ewo-services-filters-row').length === 0) {
+        $container.before('<div id="ewo-services-filters-row" class="ewo-controls-row ewo-filters-row"></div>');
+      }
+      $('#ewo-services-filters-row').html(`
         <div class="ewo-filters">
-          <input type="text" id="ewo-service-search" class="ewo-input" placeholder="Search services..." style="max-width: 220px;">
-          <select id="ewo-network-type-filter" class="ewo-input" style="max-width: 180px;">
+          <input type="text" id="ewo-service-search" class="ewo-input" placeholder="Search services...">
+          <select id="ewo-network-type-filter" class="ewo-input">
             <option value="">All Network Types</option>
             <option value="Tarana">Tarana</option>
             <option value="Non-Tarana">Non-Tarana</option>
           </select>
-          <select id="ewo-service-ordering" class="ewo-input" style="max-width: 180px;">
+          <select id="ewo-service-ordering" class="ewo-input">
             <option value="default">Sort by</option>
             <option value="speed-desc">Speed (High to Low)</option>
             <option value="speed-asc">Speed (Low to High)</option>
@@ -1401,30 +1443,23 @@
           </select>
         </div>
       `);
+    } else {
+      $('#ewo-services-filters-row').remove();
     }
-    // Selector de columnas (solo en grid)
-    if (currentView === 'grid') {
-      const colOptions = [2, 3, 4];
-      let colSelect = `<div class="ewo-columns-select">Columns: <select id="ewo-columns-select">`;
-      colOptions.forEach(opt => {
-        colSelect += `<option value="${opt}" ${columns === opt ? 'selected' : ''}>${opt}</option>`;
-      });
-      colSelect += `</select></div>`;
-      $container.append(colSelect);
-    }
-    // Selector de ítems por página
-    const perPageOptions = [4, 8, 12, 16];
-    let perPageSelect = `<div class="ewo-per-page-select">Items per page: <select id="ewo-per-page-select">`;
-    perPageOptions.forEach(opt => {
-      perPageSelect += `<option value="${opt}" ${perPage === opt ? 'selected' : ''}>${opt}</option>`;
-    });
-    perPageSelect += `</select></div>`;
-    $container.append(perPageSelect);
-    // Toggle de vista
+    // Fila principal de controles
     $container.append(`
-      <div class="ewo-view-toggle">
-        <button class="ewo-toggle-btn" data-view="grid" ${currentView === 'grid' ? 'disabled' : ''}>Grid</button>
-        <button class="ewo-toggle-btn" data-view="list" ${currentView === 'list' ? 'disabled' : ''}>List</button>
+      <div class="ewo-controls-row ewo-main-controls">
+        <div class="ewo-controls-left">
+          <span class="ewo-services-count">${total} services found</span>
+        </div>
+        <div class="ewo-controls-right">
+          <div class="ewo-columns-select">Columns: <select id="ewo-columns-select" class="ewo-compact-select">${[2,3,4].map(opt => `<option value="${opt}" ${columns===opt?'selected':''}>${opt}</option>`).join('')}</select></div>
+          <div class="ewo-per-page-select">Items per page: <select id="ewo-per-page-select" class="ewo-compact-select">${[4,8,12,16].map(opt => `<option value="${opt}" ${perPage===opt?'selected':''}>${opt}</option>`).join('')}</select></div>
+          <div class="ewo-view-toggle">
+            <button class="ewo-toggle-btn" data-view="grid" ${currentView==='grid'?'disabled':''}>Grid</button>
+            <button class="ewo-toggle-btn" data-view="list" ${currentView==='list'?'disabled':''}>List</button>
+          </div>
+        </div>
       </div>
     `);
   }
@@ -1505,44 +1540,40 @@
       $servicesList.css({ display: 'block' });
     }
     // Render items
-    const $template = $("#ewo-service-template");
-    pageServices.forEach(function (service) {
-      const $serviceItem = $($template.html());
-      $serviceItem
-        .find(".ewo-service-name")
-        .text(
-          service.coverage_code
-            ? `Coverage: ${service.coverage_code} (${service.network_type || ''})`
-            : "Unnamed service"
-        );
-      $serviceItem.find(".ewo-service-price").text(
-        service.max_download_speed_mbps
-          ? `Speed: ${service.max_download_speed_mbps} Mbps`
-          : ""
-      );
-      $serviceItem
-        .find(".ewo-service-description")
-        .text(
-          service.coverage_confidence && service.coverage_confidence.status_text_full
-            ? service.coverage_confidence.status_text_full
-            : "No description"
-        );
-      $serviceItem
-        .find(".ewo-select-service")
-        .attr("data-service-id", service.id);
-      $serviceItem.attr("data-service-json", JSON.stringify(service));
-      // Card color usage
+    pageServices.forEach(function (service, idx) {
+      let cardClass = 'ewo-service-card ewo-addon-card'; // reutiliza estilos de addon
+      let style = '';
       if (CARD_COLOR_USAGE !== 'none' && service.coverage_confidence && service.coverage_confidence.status_color_hex) {
         if (CARD_COLOR_USAGE === 'border') {
-          $serviceItem.css({
-            'border': '2px solid ' + service.coverage_confidence.status_color_hex,
-            'box-shadow': '0 0 0 1px ' + service.coverage_confidence.status_color_hex
-          });
+          style = `border:2px solid ${service.coverage_confidence.status_color_hex};box-shadow:0 0 0 1px ${service.coverage_confidence.status_color_hex};`;
         } else if (CARD_COLOR_USAGE === 'background') {
-          $serviceItem.css('background-color', service.coverage_confidence.status_color_hex);
+          style = `background-color:${service.coverage_confidence.status_color_hex};`;
         }
       }
-      $servicesList.append($serviceItem);
+      const readableType = service.network_type || '';
+      const speed = service.max_download_speed_mbps ? `$${service.max_download_speed_mbps}`.replace('.00','') + ' Mbps' : '';
+      const description = service.coverage_confidence && service.coverage_confidence.status_text_full ? service.coverage_confidence.status_text_full : 'No description';
+      const coverage = service.coverage_code ? `<strong>${service.coverage_code}</strong>` : '';
+      const id = service.id || '';
+      const selectedClass = (idx === 0 && currentPage === 1) ? 'selected' : '';
+      // Diseño similar a addon: tipo arriba, nombre, precio, descripción
+      const cardHtml = `
+        <div class="${cardClass} ${selectedClass}" style="${style}" data-service-id="${id}" data-service-json='${JSON.stringify(service)}'>
+          ${readableType ? `<div class='ewo-addon-type'>${readableType}</div>` : ''}
+          <div class="ewo-addon-header">
+            <span class="ewo-addon-name">${coverage}</span>
+            <span class="ewo-addon-price">${speed}</span>
+          </div>
+          <div class="ewo-addon-description">${description}</div>
+        </div>
+      `;
+      $servicesList.append(cardHtml);
+    });
+    // Evento de selección visual por click en la card
+    $(document).off('click', '.ewo-service-card').on('click', '.ewo-service-card', function(e) {
+      $('.ewo-service-card').removeClass('selected');
+      $(this).addClass('selected');
+      selectService.call(this);
     });
   }
 
