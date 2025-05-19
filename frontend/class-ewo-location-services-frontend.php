@@ -152,6 +152,15 @@ class Ewo_Location_Services_Frontend {
             'step_label_5' => isset($listing_options['step_label_5']) ? $listing_options['step_label_5'] : 'Your Information',
             'step_label_6' => isset($listing_options['step_label_6']) ? $listing_options['step_label_6'] : 'Confirmation',
         ));
+
+        // Encolar el JS de resumen de oportunidad (debe ir después del principal)
+        wp_enqueue_script(
+            'ewo-location-opportunity',
+            plugin_dir_url(__FILE__) . 'js/ewo-location-opportunity.js',
+            array('jquery', $this->plugin_name),
+            $this->version,
+            true
+        );
     }
 
     /**

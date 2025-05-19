@@ -24,6 +24,8 @@ This guide outlines the steps and components required to develop a WordPress plu
 *   Allowing users to select a service package.
 *   Presenting cross-sell/addon options.
 *   Forms for user details input.
+*   Each step of the onboarding process will use separate pages.
+*   For the user data input form, we will use a modal where the user can even choose the available add-ons for the package they want to subscribe to.
 *   WordPress user account creation upon form submission.
 *   Sending user details to a specific API endpoint (e.g., Opportunities).
 *   Ensuring broad browser compatibility (desktop and mobile).

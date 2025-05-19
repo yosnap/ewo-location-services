@@ -145,7 +145,7 @@ if (!defined('ABSPATH')) {
                 <?php _e('Back', 'ewo-location-services'); ?>
             </button>
             <button id="ewo-continue-to-confirmation" class="ewo-button ewo-button-primary">
-                <?php _e('Continue', 'ewo-location-services'); ?>
+                <?php _e('Confirm order', 'ewo-location-services'); ?>
             </button>
         </div>
     </div>
@@ -219,18 +219,7 @@ if (!defined('ABSPATH')) {
     </div>
     
     <!-- Confirmación (inicialmente oculta) -->
-    <div id="ewo-confirmation-container" class="ewo-section">
-        <div class="ewo-confirmation-success">
-            <span class="dashicons dashicons-yes-alt"></span>
-            <h2><?php _e('Registration Successful!', 'ewo-location-services'); ?></h2>
-            <p><?php _e('Thank you for registering. Your service request has been submitted successfully.', 'ewo-location-services'); ?></p>
-            <div class="ewo-form-actions">
-                <a href="<?php echo esc_url(home_url()); ?>" class="ewo-button ewo-button-primary">
-                    <?php _e('Back to Home', 'ewo-location-services'); ?>
-                </a>
-            </div>
-        </div>
-    </div>
+    <div id="ewo-confirmation-container" class="ewo-section"></div>
     
     <!-- Debug Modal (inicialmente oculto) -->
     <div id="ewo-debug-modal" class="ewo-modal">
