@@ -140,6 +140,10 @@ class Ewo_Location_Services_Frontend {
             'step_inactive_color' => isset($listing_options['step_inactive_color']) ? $listing_options['step_inactive_color'] : '#bbb',
             'autocomplete_provider' => $autocomplete_provider,
             'autocomplete_api_key' => isset($listing_options['autocomplete_api_key']) ? $listing_options['autocomplete_api_key'] : '',
+            'map_provider' => isset($listing_options['map_provider']) ? $listing_options['map_provider'] : 'osm',
+            'map_google_api_key' => isset($listing_options['map_google_api_key']) ? $listing_options['map_google_api_key'] : '',
+            'google_autocomplete_api_key' => isset($listing_options['google_autocomplete_api_key']) ? $listing_options['google_autocomplete_api_key'] : '',
+            'mapbox_autocomplete_api_key' => isset($listing_options['mapbox_autocomplete_api_key']) ? $listing_options['mapbox_autocomplete_api_key'] : '',
             // Labels personalizados
             'step_label_1' => isset($listing_options['step_label_1']) ? $listing_options['step_label_1'] : 'Location',
             'step_label_2' => isset($listing_options['step_label_2']) ? $listing_options['step_label_2'] : 'Service',

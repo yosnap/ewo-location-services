@@ -103,10 +103,12 @@
       $('#ewo-user-password, #ewo-user-password-confirm').prop('required', true);
     }
 
-    // Inicializar el mapa si el contenedor existe
+    // Inicializar el mapa si el contenedor existe (COMENTADO)
+    /*
     if ($("#ewo-map-container").length) {
       initMap();
     }
+    */
 
     // Eventos para los botones de localización
     $("#ewo-use-my-location").on("click", getUserLocation);
@@ -184,7 +186,8 @@
       renderServices();
     });
 
-    // --- AUTOCOMPLETADO DE DIRECCIONES ---
+    // --- AUTOCOMPLETADO DE DIRECCIONES --- (Toda esta sección se moverá/eliminará)
+    /*
     const autocompleteProvider = window.ewoServiceListingOptions?.autocomplete_provider || 'nominatim';
     const autocompleteApiKey = window.ewoServiceListingOptions?.autocomplete_api_key || '';
 
@@ -364,13 +367,18 @@
         });
       }
     }
+    */
 
-    // Inicializar autocompletado al cargar si el input está visible
+    // Inicializar autocompletado al cargar si el input está visible (COMENTADO)
+    /*
     if ($('#ewo-location-form-container').is(':visible')) {
       initAddressAutocomplete();
     }
+    */
 
-    // Re-inicializar autocompletado cada vez que se muestre el paso 1
+    // Re-inicializar autocompletado cada vez que se muestre el paso 1 (COMENTADO)
+    // La función window.showLocationSection se redefine más abajo, pero la llamada a initAddressAutocomplete aquí se comenta
+    /*
     window.showLocationSection = function() {
       $(".ewo-section").removeClass("active");
       $("#ewo-location-form-container").addClass("active");
@@ -380,8 +388,9 @@
           map.invalidateSize();
         }, 10);
       }
-      initAddressAutocomplete();
+      // initAddressAutocomplete(); // ESTA LLAMADA SE COMENTA
     };
+    */
 
     // Ocultar barra de pasos si la opción está en 'no' o 'none'
     if (window.ewoServiceListingOptions && (window.ewoServiceListingOptions.show_form_steps === 'no' || window.ewoServiceListingOptions.form_steps_style === 'none')) {
@@ -495,8 +504,9 @@
   });
 
   /**
-   * Inicializa el mapa de OpenStreetMap con Leaflet
+   * Inicializa el mapa de OpenStreetMap con Leaflet (COMENTADO)
    */
+  /*
   function initMap() {
     // Coordenadas iniciales (centro del mapa)
     const initialLat = 37.806479687628936;
@@ -542,6 +552,7 @@
       map.invalidateSize();
     }, 100);
   }
+  */
 
   /**
    * Actualiza los campos ocultos con las coordenadas actuales
@@ -653,7 +664,8 @@
         q: address,
         format: "json",
         limit: 1,
-        addressdetails: 1
+        addressdetails: 1,
+        'accept-language': 'en'
       },
       success: function (data) {
         if (data && data.length > 0) {
@@ -694,7 +706,8 @@
         lat: lat,
         lon: lng,
         format: "json",
-        addressdetails: 1
+        addressdetails: 1,
+        'accept-language': 'en'
       },
       success: function (data) {
         if (data && data.display_name) {
@@ -889,7 +902,7 @@
         map.invalidateSize();
       }, 10);
     }
-    initAddressAutocomplete();
+    // initAddressAutocomplete(); // ESTA LLAMADA SE COMENTA
   }
 
   function showServicesSection() {

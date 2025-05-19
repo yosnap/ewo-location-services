@@ -176,7 +176,7 @@ class Ewo_Location_Services_Admin {
             <div class="ewo-tabs" style="margin-bottom: 2rem;">
                 <button class="ewo-tab-btn active" data-tab="display">Service Listing Display</button>
                 <button class="ewo-tab-btn" data-tab="steps">Form Steps Customization</button>
-                <button class="ewo-tab-btn" data-tab="autocomplete">Autocomplete</button>
+                <button class="ewo-tab-btn" data-tab="autocomplete">Map & Autocomplete Settings</button>
             </div>
             <form method="post" action="options.php">
                 <?php
@@ -218,42 +218,77 @@ class Ewo_Location_Services_Admin {
                     $('#ewo-tab-content-display').addClass('active');
                 }
                 localStorage.setItem('ewo_service_listing_tab', tab);
+                // Al cambiar de pestaña, volver a evaluar los campos condicionales y validación
+                toggleApiKeyFields();
+                setTimeout(validateApiKeys, 100);
             }
-            // Al hacer clic en pestaña
             $('.ewo-tab-btn').on('click', function(){
                 setActiveTab($(this).data('tab'));
             });
-            // Al cargar, restaurar pestaña activa
             var lastTab = localStorage.getItem('ewo_service_listing_tab') || 'display';
             setActiveTab(lastTab);
 
-            // Mostrar/ocultar input de API key según proveedor
-            function toggleApiKeyField() {
-                var provider = $('#ewo_autocomplete_provider').val();
-                if (provider === 'google' || provider === 'mapbox') {
-                    $('#ewo_autocomplete_api_key_row').show();
+            // --- CAMPOS CONDICIONALES Y VALIDACIÓN ---
+            function toggleApiKeyFields() {
+                var mapProvider = $('#ewo_map_provider').val();
+                var autocompleteProvider = $('#ewo_autocomplete_provider').val();
+                // Google Maps API Key
+                var googleMapsRow = $('#ewo_map_google_api_key_row').closest('tr');
+                if (mapProvider === 'google') {
+                    googleMapsRow.show();
                 } else {
-                    $('#ewo_autocomplete_api_key_row').hide();
+                    googleMapsRow.hide();
+                }
+                // Google Autocomplete API Key
+                var googleAutoRow = $('#ewo_google_autocomplete_api_key_row').closest('tr');
+                if (autocompleteProvider === 'google') {
+                    googleAutoRow.show();
+                } else {
+                    googleAutoRow.hide();
+                }
+                // Mapbox Autocomplete API Key
+                var mapboxAutoRow = $('#ewo_mapbox_autocomplete_api_key_row').closest('tr');
+                if (autocompleteProvider === 'mapbox') {
+                    mapboxAutoRow.show();
+                } else {
+                    mapboxAutoRow.hide();
                 }
             }
-            $('#ewo_autocomplete_provider').on('change', toggleApiKeyField);
-            toggleApiKeyField(); // Ejecutar SIEMPRE al cargar
-            // Media uploader para SVG
-            $('.ewo-upload-svg').on('click', function(e){
-                e.preventDefault();
-                var target = $(this).data('target');
-                var frame = wp.media({
-                    title: 'Select or Upload SVG',
-                    button: { text: 'Use this SVG' },
-                    library: { type: 'image/svg+xml' },
-                    multiple: false
-                });
-                frame.on('select', function(){
-                    var url = frame.state().get('selection').first().toJSON().url;
-                    $(target).val(url);
-                });
-                frame.open();
+            function validateApiKeys() {
+                var mapProvider = $('#ewo_map_provider').val();
+                var autocompleteProvider = $('#ewo_autocomplete_provider').val();
+                var mapGoogleKey = $('input[name="ewo_service_listing_options[map_google_api_key]"]').val();
+                var googleAutoKey = $('input[name="ewo_service_listing_options[google_autocomplete_api_key]"]').val();
+                var mapboxAutoKey = $('input[name="ewo_service_listing_options[mapbox_autocomplete_api_key]"]').val();
+                var errorMsg = '';
+                if ($('#ewo_map_google_api_key_row').is(':visible') && !mapGoogleKey) {
+                    errorMsg += '<div class="notice notice-error"><p>Google Maps API Key is required for Google Maps provider.</p></div>';
+                }
+                if ($('#ewo_google_autocomplete_api_key_row').is(':visible') && !googleAutoKey) {
+                    errorMsg += '<div class="notice notice-error"><p>Google Autocomplete API Key is required for Google Places Autocomplete.</p></div>';
+                }
+                if ($('#ewo_mapbox_autocomplete_api_key_row').is(':visible') && !mapboxAutoKey) {
+                    errorMsg += '<div class="notice notice-error"><p>Mapbox Autocomplete API Key is required for Mapbox Autocomplete.</p></div>';
+                }
+                $('#ewo-api-key-errors').remove();
+                if (errorMsg) {
+                    $('.ewo-tab-content.active form, form.ewo-settings-form').before('<div id="ewo-api-key-errors">'+errorMsg+'</div>');
+                    $('input[type="submit"], button[type="submit"]').prop('disabled', true);
+                } else {
+                    $('#ewo-api-key-errors').remove();
+                    $('input[type="submit"], button[type="submit"]').prop('disabled', false);
+                }
+            }
+            $('#ewo_map_provider, #ewo_autocomplete_provider').on('change', function(){
+                toggleApiKeyFields();
+                setTimeout(validateApiKeys, 100);
             });
+            $('input[name^="ewo_service_listing_options["]').on('input', function(){
+                setTimeout(validateApiKeys, 100);
+            });
+            // Inicialización al cargar
+            toggleApiKeyFields();
+            setTimeout(validateApiKeys, 100);
         });
         </script>
         <?php
@@ -854,11 +889,18 @@ class Ewo_Location_Services_Admin {
         // Sección y campos para Autocomplete
         add_settings_section(
             'ewo_autocomplete_settings_section',
-            __('Autocomplete Settings', 'ewo-location-services'),
+            __('Provider Configuration', 'ewo-location-services'),
             function() {
-                echo '<p>' . __('Configure the address autocomplete provider for the location form.', 'ewo-location-services') . '</p>';
+                echo '<p>' . __('Configure the provider for address autocomplete and map display.', 'ewo-location-services') . '</p>';
             },
             'ewo_autocomplete_settings'
+        );
+        add_settings_field(
+            'map_provider',
+            __('Map Provider', 'ewo-location-services'),
+            array($this, 'settings_field_map_provider_cb'),
+            'ewo_autocomplete_settings',
+            'ewo_autocomplete_settings_section'
         );
         add_settings_field(
             'autocomplete_provider',
@@ -877,14 +919,42 @@ class Ewo_Location_Services_Admin {
             'ewo_autocomplete_settings_section'
         );
         add_settings_field(
-            'autocomplete_api_key',
-            __('API Key', 'ewo-location-services'),
+            'map_google_api_key',
+            __('Google Maps API Key', 'ewo-location-services'),
             function() {
                 $opts = get_option('ewo_service_listing_options');
-                $val = isset($opts['autocomplete_api_key']) ? esc_attr($opts['autocomplete_api_key']) : '';
-                echo '<div id="ewo_autocomplete_api_key_row">';
-                echo '<input type="text" name="ewo_service_listing_options[autocomplete_api_key]" value="' . $val . '" style="width: 350px;">';
-                echo '<p class="description">' . __('Required for Google Places or Mapbox. Leave empty for Nominatim or Algolia.', 'ewo-location-services') . '</p>';
+                $val = isset($opts['map_google_api_key']) ? esc_attr($opts['map_google_api_key']) : '';
+                echo '<div id="ewo_map_google_api_key_row">';
+                echo '<input type="text" name="ewo_service_listing_options[map_google_api_key]" value="' . $val . '" style="width: 350px;">';
+                echo '<p class="description">Required for Google Maps display. Must have Maps JavaScript API enabled.</p>';
+                echo '</div>';
+            },
+            'ewo_autocomplete_settings',
+            'ewo_autocomplete_settings_section'
+        );
+        add_settings_field(
+            'google_autocomplete_api_key',
+            __('Google Autocomplete API Key', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['google_autocomplete_api_key']) ? esc_attr($opts['google_autocomplete_api_key']) : '';
+                echo '<div id="ewo_google_autocomplete_api_key_row">';
+                echo '<input type="text" name="ewo_service_listing_options[google_autocomplete_api_key]" value="' . $val . '" style="width: 350px;">';
+                echo '<p class="description">Required for Google Places Autocomplete. Must have Places API enabled.</p>';
+                echo '</div>';
+            },
+            'ewo_autocomplete_settings',
+            'ewo_autocomplete_settings_section'
+        );
+        add_settings_field(
+            'mapbox_autocomplete_api_key',
+            __('Mapbox Autocomplete API Key', 'ewo-location-services'),
+            function() {
+                $opts = get_option('ewo_service_listing_options');
+                $val = isset($opts['mapbox_autocomplete_api_key']) ? esc_attr($opts['mapbox_autocomplete_api_key']) : '';
+                echo '<div id="ewo_mapbox_autocomplete_api_key_row">';
+                echo '<input type="text" name="ewo_service_listing_options[mapbox_autocomplete_api_key]" value="' . $val . '" style="width: 350px;">';
+                echo '<p class="description">Required for Mapbox Autocomplete. Must have Geocoding API enabled.</p>';
                 echo '</div>';
             },
             'ewo_autocomplete_settings',
@@ -1430,6 +1500,30 @@ class Ewo_Location_Services_Admin {
             'raw_response' => $data,
             'debug' => $debug_data
         ));
+    }
+
+    /**
+     * Renderiza el campo de selección para el proveedor de mapas.
+     *
+     * @since 1.0.1
+     */
+    public function settings_field_map_provider_cb() {
+        $options = get_option('ewo_service_listing_options');
+        $map_provider = isset($options['map_provider']) ? $options['map_provider'] : 'osm'; // 'osm' como valor por defecto
+
+        ?>
+        <select id="ewo_map_provider" name="ewo_service_listing_options[map_provider]">
+            <option value="osm" <?php selected($map_provider, 'osm'); ?>>
+                <?php esc_html_e('OpenStreetMap (Leaflet)', 'ewo-location-services'); ?>
+            </option>
+            <option value="google" <?php selected($map_provider, 'google'); ?>>
+                <?php esc_html_e('Google Maps', 'ewo-location-services'); ?>
+            </option>
+        </select>
+        <p class="description">
+            <?php esc_html_e('Select the map provider for the frontend map display. If Google Maps is chosen, ensure the necessary API key is configured and has the Maps JavaScript API enabled.', 'ewo-location-services'); ?>
+        </p>
+        <?php
     }
 }
 
