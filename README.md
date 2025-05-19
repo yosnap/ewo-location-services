@@ -1,6 +1,30 @@
-# Ewo Location Services
+# EWO Location Services Plugin
 
-Plugin de WordPress para servicios basados en ubicación, permitiendo a los usuarios encontrar y reservar servicios según su ubicación geográfica.
+Plugin de WordPress para búsqueda y contratación de servicios según ubicación, con integración a APIs externas y flujo multistep.
+
+## Características principales (v1)
+- Formulario multistep en una sola página (location → servicios → planes → addons → usuario → confirmación).
+- Selección de ubicación: dirección, geolocalización o mapa.
+- Búsqueda de servicios según lat/lng vía API externa.
+- Selección visual de cards para servicios, planes y addons.
+- Formulario de usuario y envío de oportunidad a API externa.
+- Resumen final con descarga/impresión y guardado en localStorage.
+- Modal de depuración para admins.
+- Configuración desde el backend: API keys, endpoints, opciones de UI.
+- Frontend moderno y responsive.
+- Todo el flujo en inglés.
+
+## Requisitos
+- WordPress reciente
+- PHP 7.4+
+- API externa de servicios y oportunidades
+
+## Roadmap v2
+- Separar cada paso en páginas independientes (no multiform).
+- Modal para datos de usuario y selección de addons.
+- Mejorar arquitectura para integración y mantenimiento.
+- Mantener toda la funcionalidad, pero con navegación desacoplada.
+- Mejorar logging, UX y compatibilidad.
 
 ## Descripción
 
@@ -17,12 +41,6 @@ Ewo Location Services es un plugin que integra la geocodificación y geolocaliza
 - Sistema de logs para depuración y diagnóstico
 - Herramienta de prueba de API en el panel de administración
 - Modal de depuración para desarrolladores
-
-## Requisitos
-
-- WordPress 5.0 o superior
-- PHP 7.2 o superior
-- Conexión a Internet para la carga de mapas y geocodificación
 
 ## Instalación
 

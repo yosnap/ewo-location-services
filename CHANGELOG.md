@@ -23,13 +23,18 @@
 - Mejora en la gestión de dependencias JavaScript
 - Optimización del código JavaScript del frontend
 
-## [1.0.0] - 2025-05-01
+## [1.0.0] - Primera versión estable
 
-### Añadido
-
-- Implementación inicial del plugin
-- Integración con OpenStreetMap y Leaflet
-- Funcionalidad de búsqueda de servicios por ubicación
-- Panel de administración para configuración de API
-- Sistema de logs para depuración
-- Shortcode para mostrar el formulario de búsqueda
+### Added
+- Estructura modular de frontend (JS/CSS) y backend (PHP).
+- Multistep form con pasos: ubicación, servicio, plan, addons, usuario, confirmación.
+- Integración con APIs externas para servicios y oportunidades.
+- Selección visual de cards para servicios, planes y addons.
+- Guardado y recuperación de datos en localStorage.
+- Resumen final con impresión y descarga.
+- Modal de depuración para admins.
+- Configuración flexible desde el admin de WordPress.
+- Soporte para múltiples proveedores de mapas/autocompletado.
+- Estilos modernos y responsive.
+- Validaciones y UX amigable.
+- Logging y debug para admins.
