@@ -653,3 +653,248 @@
     margin: 0 0 18px 0;
   }
 }
+
+:root {
+  --ewo-step-active-color: #c2185b;
+  --ewo-step-inactive-color: #e5e1e1;
+  --ewo-step-active-bg: #ffe3ef;
+  --ewo-step-inactive-bg: #eee;
+  --ewo-step-size: 32px;
+}
+
+/* Multistep: Estados y colores dinámicos */
+.ewo-step {
+  --step-bg: var(--ewo-step-inactive-bg);
+  --step-color: var(--ewo-step-inactive-color);
+  --step-size: var(--ewo-step-size);
+}
+.ewo-step.active {
+  --step-bg: var(--ewo-step-active-bg);
+  --step-color: var(--ewo-step-active-color);
+}
+.ewo-step-icon, .ewo-step-number, .ewo-step img {
+  background: var(--step-bg) !important;
+  color: var(--step-color) !important;
+  border-radius: 50%;
+  display: inline-block;
+  width: calc(var(--step-size) * 0.7);
+  height: calc(var(--step-size) * 0.7);
+  line-height: calc(var(--step-size) * 0.7);
+  font-size: calc(var(--step-size) * 0.7);
+  text-align: center;
+}
+.ewo-step-label {
+  color: var(--step-color) !important;
+  font-weight: normal;
+  display: block;
+  margin-top: 4px;
+}
+.ewo-step.active .ewo-step-label {
+  font-weight: bold;
+}
+/* Progreso barra */
+.ewo-progress-bar-bg {
+  background: var(--ewo-step-inactive-bg);
+  border-radius: 5px;
+  height: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.ewo-progress-bar-fill {
+  background: var(--ewo-step-active-color);
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+/* --- Plan Cards --- */
+.ewo-plan-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+.ewo-plan-card {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(37,99,235,0.06);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  width: 320px;
+  max-width: 95vw;
+  transition: border 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.ewo-plan-card.selected,
+.ewo-plan-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 4px 24px rgba(37,99,235,0.13);
+}
+.ewo-plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.ewo-plan-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+.ewo-plan-price {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #2563eb;
+}
+.ewo-plan-features ul {
+  margin: 0 0 1rem 0;
+  padding-left: 1.2em;
+  color: #64748b;
+  font-size: 1rem;
+}
+.ewo-plan-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: auto;
+}
+.ewo-plan-card input[type="radio"] {
+  accent-color: #2563eb;
+  width: 20px;
+  height: 20px;
+}
+.ewo-plan-card.selected::after {
+  content: '✓';
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(37,99,235,0.13);
+  z-index: 2;
+  border: 3px solid #fff;
+}
+
+/* --- Plan Cards: Modern Offer Styles --- */
+.ewo-plan-type {
+  display: inline-block;
+  background: #e0e7ef;
+  color: #2563eb;
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 2px 10px;
+  margin-bottom: 0.7em;
+  letter-spacing: 0.02em;
+}
+.ewo-plan-price-old {
+  color: #b91c1c;
+  text-decoration: line-through;
+  font-size: 1.05rem;
+  margin-left: 0.7em;
+  opacity: 0.7;
+}
+.ewo-plan-price-offer {
+  color: #059669;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-left: 0.2em;
+}
+
+/* --- Addon Cards --- */
+.ewo-addon-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+.ewo-addon-card {
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(37,99,235,0.06);
+  padding: 1.3rem 1.2rem 1.2rem 1.2rem;
+  width: 270px;
+  max-width: 95vw;
+  transition: border 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.ewo-addon-card.selected,
+.ewo-addon-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 4px 24px rgba(37,99,235,0.13);
+}
+.ewo-addon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+.ewo-addon-name {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+.ewo-addon-price {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #2563eb;
+}
+.ewo-addon-type {
+  display: inline-block;
+  background: #e0e7ef;
+  color: #2563eb;
+  font-size: 0.89rem;
+  font-weight: 500;
+  border-radius: 6px;
+  padding: 2px 10px;
+  margin-bottom: 0.5em;
+  letter-spacing: 0.02em;
+}
+.ewo-addon-description {
+  color: #64748b;
+  font-size: 0.97rem;
+  margin-top: 0.5em;
+}
+.ewo-addon-card input[type="checkbox"] {
+  display: none;
+}
+.ewo-addon-card.selected::after {
+  content: '✓';
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: #059669;
+  color: #fff;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(5,150,105,0.13);
+  z-index: 2;
+  border: 3px solid #fff;
+}

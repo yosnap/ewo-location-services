@@ -968,32 +968,46 @@
       opts.step_label_5 || 'Addons',
       opts.step_label_6 || 'Confirmation'
     ];
+    // --- NUEVO: Actualizar variables CSS dinámicamente SOLO si hay valor en el backend ---
+    if (opts.step_size) {
+      document.documentElement.style.setProperty('--ewo-step-size', size + 'px');
+    }
+    if (opts.step_active_color) {
+      document.documentElement.style.setProperty('--ewo-step-active-color', activeColor);
+    }
+    if (opts.step_inactive_color) {
+      document.documentElement.style.setProperty('--ewo-step-inactive-color', inactiveColor);
+    }
+    if (opts.step_active_bg) {
+      document.documentElement.style.setProperty('--ewo-step-active-bg', activeBg);
+    }
+    if (opts.step_inactive_bg) {
+      document.documentElement.style.setProperty('--ewo-step-inactive-bg', inactiveBg);
+    }
     if (style === 'circles') {
       $stepsOl.show();
       $stepsProgress.hide();
-      // Render círculos con colores personalizados
       $stepsOl.empty();
       for (let i = 1; i <= totalSteps; i++) {
         const label = stepLabels[i-1];
         const isActive = (i === activeStep);
         let iconHtml = '';
-        let iconStyle = `background:${isActive ? activeBg : inactiveBg};color:${isActive ? activeColor : inactiveColor};border-radius:50%;padding:2px;display:inline-block;`;
+        let iconClass = 'ewo-step-icon';
         if (iconType === 'dashicons') {
           const icon = opts['step_icon_' + i] || 'location';
-          iconHtml = '<span class="dashicons dashicons-' + icon + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
+          iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '"></span>';
         } else if (iconType === 'svg') {
           const svgUrl = opts['step_svg_' + i] || '';
           if (svgUrl) {
-            iconHtml = '<img src="' + svgUrl + '" style="width:' + (size * 0.7) + 'px;height:' + (size * 0.7) + 'px;' + iconStyle + '" alt="Step icon">';
+            iconHtml = '<img src="' + svgUrl + '" class="' + iconClass + '" alt="Step icon">';
           } else {
             const icon = opts['step_icon_' + i] || 'location';
-            iconHtml = '<span class="dashicons dashicons-' + icon + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
+            iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '"></span>';
           }
         } else {
-          iconHtml = '<span class="ewo-step-number" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '">' + i + '</span>';
+          iconHtml = '<span class="ewo-step-number ' + iconClass + '">' + i + '</span>';
         }
-        let labelStyle = `color:${isActive ? activeColor : inactiveColor};font-weight:${isActive ? 'bold' : 'normal'};display:block;margin-top:4px;`;
-        $stepsOl.append('<li class="ewo-step' + (isActive ? ' active' : '') + '" data-step="' + i + '" style="flex:1;text-align:center;list-style:none;">' + iconHtml + (showLabels ? '<span class="ewo-step-label" style="' + labelStyle + '">' + label + '</span>' : '') + '</li>');
+        $stepsOl.append('<li class="ewo-step' + (isActive ? ' active' : '') + '" data-step="' + i + '">' + iconHtml + (showLabels ? '<span class="ewo-step-label">' + label + '</span>' : '') + '</li>');
       }
     } else if (style === 'progress_bar') {
       $stepsOl.hide();
@@ -1001,36 +1015,34 @@
       let iconsHtml = '<div class="ewo-progress-icons" style="display:flex;justify-content:space-between;margin-bottom:6px;">';
       for (let i = 1; i <= totalSteps; i++) {
         let iconHtml = '';
-        let iconClass = (i === activeStep) ? 'active' : '';
-        let iconStyle = `background:${i === activeStep ? activeBg : inactiveBg};color:${i === activeStep ? activeColor : inactiveColor};border-radius:50%;padding:2px;display:inline-block;`;
+        let iconClass = 'ewo-step-icon' + (i === activeStep ? ' active' : '');
         if (iconType === 'dashicons') {
           const icon = opts['step_icon_' + i] || 'location';
-          iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
+          iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '"></span>';
         } else if (iconType === 'svg') {
           const svgUrl = opts['step_svg_' + i] || '';
           if (svgUrl) {
-            iconHtml = '<img src="' + svgUrl + '" class="' + iconClass + '" style="width:' + (size * 0.7) + 'px;height:' + (size * 0.7) + 'px;' + iconStyle + '" alt="Step icon">';
+            iconHtml = '<img src="' + svgUrl + '" class="' + iconClass + '" alt="Step icon">';
           } else {
             const icon = opts['step_icon_' + i] || 'location';
-            iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '" aria-hidden="true" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '"></span>';
+            iconHtml = '<span class="dashicons dashicons-' + icon + ' ' + iconClass + '"></span>';
           }
         } else if (iconType === 'none') {
-          iconHtml = '<span class="ewo-step-number ' + iconClass + '" style="font-size:' + (size * 0.7) + 'px;line-height:' + size + 'px;' + iconStyle + '">' + i + '</span>';
+          iconHtml = '<span class="ewo-step-number ' + iconClass + '">' + i + '</span>';
         }
-        iconsHtml += '<span class="ewo-progress-icon ' + iconClass + '" style="flex:1;text-align:center;">' + iconHtml + '</span>';
+        iconsHtml += '<span class="ewo-progress-icon' + (i === activeStep ? ' active' : '') + '">' + iconHtml + '</span>';
       }
       iconsHtml += '</div>';
       let labelsHtml = '<div class="ewo-progress-labels" style="display:flex;justify-content:space-between;margin-bottom:6px;">';
       for (let i = 1; i <= totalSteps; i++) {
         const label = stepLabels[i-1];
         const activeClass = (i === activeStep) ? 'active' : '';
-        let labelStyle = `color:${i === activeStep ? activeColor : inactiveColor};font-weight:${i === activeStep ? 'bold' : 'normal'};`;
-        labelsHtml += '<span class="ewo-progress-label ' + activeClass + '" style="flex:1;text-align:center;font-size:0.98em;padding:0 4px;min-width:60px;white-space:nowrap;' + labelStyle + '">' + label + '</span>';
+        labelsHtml += '<span class="ewo-progress-label ' + activeClass + '">' + label + '</span>';
       }
       labelsHtml += '</div>';
-      let barHtml = '<div class="ewo-progress-bar-bg" style="position:relative;height:10px;border-radius:5px;background:' + inactiveBg + ';overflow:hidden;">';
+      let barHtml = '<div class="ewo-progress-bar-bg">';
       const percent = (activeStep/totalSteps)*100;
-      barHtml += '<div class="ewo-progress-bar-fill" style="position:absolute;left:0;top:0;height:100%;width:' + percent + '%;background:' + activeColor + ';transition:width 0.5s cubic-bezier(.4,0,.2,1);"></div>';
+      barHtml += '<div class="ewo-progress-bar-fill" style="width:' + percent + '%;"></div>';
       barHtml += '</div>';
       $stepsProgress.html(iconsHtml + barHtml + labelsHtml);
     }
@@ -1645,4 +1657,56 @@
       }
     });
   }
+
+  // --- PLANES: Renderizado de cards seleccionables ---
+  function renderPlansSection(plans) {
+    const $container = $('#ewo-plans-container');
+    if (!$container.length) return;
+    let html = '<div class="ewo-plan-cards-container">';
+    plans.forEach(function(plan, idx) {
+      // Campos extra
+      const readableType = plan.readable_type || '';
+      const price = plan.price ? parseFloat(plan.price) : null;
+      const offer = plan.price_with_auto_pay_discount_applied ? parseFloat(plan.price_with_auto_pay_discount_applied) : null;
+      const hasDiscount = offer && price && offer < price;
+      html += `
+        <div class="ewo-plan-card" data-plan-id="${plan.id}">
+          ${readableType ? `<div class='ewo-plan-type'>${readableType}</div>` : ''}
+          <div class="ewo-plan-header">
+            <span class="ewo-plan-name">${plan.name || 'Plan'}</span>
+            <span>
+              ${hasDiscount ? `<span class='ewo-plan-price-old'>$${price.toFixed(2)}</span> <span class='ewo-plan-price-offer'>$${offer.toFixed(2)}</span>` : `<span class='ewo-plan-price'>$${(offer || price || 0).toFixed(2)}</span>`}
+            </span>
+          </div>
+          <div class="ewo-plan-features">
+            <ul>
+              ${(plan.features || []).map(f => `<li>${f}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    $container.html(html);
+    // Selección visual
+    $('.ewo-plan-card').removeClass('selected');
+    $('.ewo-plan-card').eq(0).addClass('selected');
+  }
+
+  // Eventos para selección visual de plan
+  $(document).on('click', '.ewo-plan-card', function(e) {
+    if (!$(e.target).is('input[type="radio"]')) {
+      $(this).find('input[type="radio"]').prop('checked', true).trigger('change');
+    }
+    $('.ewo-plan-card').removeClass('selected');
+    $(this).addClass('selected');
+  });
+
+  $(document).on('change', 'input[name="ewo-plan-radio"]', function() {
+    $('.ewo-plan-card').removeClass('selected');
+    $(this).closest('.ewo-plan-card').addClass('selected');
+  });
+
+  // Hacer global
+  window.renderPlansSection = renderPlansSection;
 })(jQuery);
