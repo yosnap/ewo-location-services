@@ -21,9 +21,29 @@ if (!defined('EWO_LOCATION_PLUGIN_URL')) {
 // Cargar archivos de admin y frontend
 require_once EWO_LOCATION_PLUGIN_DIR . 'admin/ewo-location-services.php';
 require_once plugin_dir_path(__FILE__) . 'frontend/class-ewo-location.php';
+require_once EWO_LOCATION_PLUGIN_DIR . 'includes/class-ewo-location-loader.php';
+// Añadir: cargar la clase frontend para el formulario Billing Details
+require_once EWO_LOCATION_PLUGIN_DIR . 'frontend/class-ewo-location-services-frontend.php';
+global $ewo_location_services_frontend;
+$ewo_location_services_frontend = new EWO_Location_Services_Frontend();
 
 // Hooks de inicialización
 register_activation_hook(__FILE__, ['Ewo_Location_Services_Admin', 'activate']);
 register_deactivation_hook(__FILE__, ['Ewo_Location_Services_Admin', 'deactivate']);
+
+// Añadir filtro global para cargar scripts ES6 como módulos
+add_filter('script_loader_tag', 'ewo_location_module_loader', 10, 3);
+function ewo_location_module_loader($tag, $handle, $src) {
+    $module_handles = [
+        'ewo-user-addons-modal',
+        'ewo-plans-slider',
+        // Agrega aquí otros handles de módulos ES6 si los necesitas
+    ];
+    if (in_array($handle, $module_handles, true)) {
+        // Forzar type="module" y mantener id y src
+        return '<script type="module" src="' . esc_url($src) . '" id="' . esc_attr($handle) . '"></script>';
+    }
+    return $tag;
+}
 
 // ... Aquí se pueden añadir más hooks y lógica global ... 

@@ -1,0 +1,193 @@
+/* EWO Billing Details Form Styles */
+
+#ewo-billing-details-form {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 32px 24px 24px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+#ewo-billing-details-form h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #222;
+  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: 12px;
+}
+
+.ewo-form-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.ewo-form-group {
+  flex: 1 1 260px;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.ewo-form-group label {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #222;
+}
+
+.ewo-form-group input,
+.ewo-form-group select {
+  border: 1.5px solid #e5e5e5;
+  border-radius: 24px;
+  padding: 12px 18px;
+  font-size: 1rem;
+  background: #fafbfc;
+  color: #222;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 0;
+}
+
+.ewo-form-group input:focus,
+.ewo-form-group select:focus {
+  border-color: var(--primary);
+  background: #fff;
+}
+
+.ewo-form-group small {
+  color: #888;
+  font-size: 0.95em;
+  margin-top: 6px;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid #e5e5e5;
+  margin: 24px 0 18px 0;
+}
+
+/* Switches */
+.ewo-switch-row {
+  margin-bottom: 8px;
+}
+
+.ewo-form-switch {
+  flex: 1 1 320px;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.ewo-form-switch label {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #222;
+}
+
+.ewo-form-switch small {
+  color: #888;
+  font-size: 0.95em;
+  margin-top: 6px;
+}
+
+.ewo-form-switch > div {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
+.ewo-switch {
+  background: #f2f2f2;
+  border: 1.5px solid #e5e5e5;
+  color: #222;
+  padding: 7px 28px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  outline: none;
+}
+
+.ewo-switch.active,
+.ewo-switch.active[data-value="Yes"] {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.ewo-switch[data-value="No"].active {
+  background: #e5e5e5;
+  color: #222;
+  border-color: #bdbdbd;
+}
+
+/* Checkbox T&C */
+.ewo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: #222;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.ewo-checkbox input[type="checkbox"] {
+  accent-color: var(--primary);
+  width: 18px;
+  height: 18px;
+}
+
+/* Submit button */
+.ewo-submit-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 14px 38px;
+  border-radius: 24px;
+  font-size: 1.08rem;
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 10px;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0,182,240,0.08);
+}
+
+.ewo-submit-btn:hover,
+.ewo-submit-btn:focus {
+  background: var(--secondary);
+}
+
+/* Alert styles (puedes usarlos para mensajes de error) */
+.ewo-alert {
+  background: var(--alert);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  #ewo-billing-details-form {
+    padding: 18px 6vw 18px 6vw;
+  }
+  .ewo-form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .ewo-form-group, .ewo-form-switch {
+    min-width: 100%;
+    margin-bottom: 12px;
+  }
+} 

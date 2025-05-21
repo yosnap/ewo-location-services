@@ -1,3 +1,5 @@
+import { openUserAddonsModal } from './ewo-user-addons-modal.js';
+
 (function() {
   const root = document.getElementById('ewo-plans-slider-root');
   if (!root) return;
@@ -27,7 +29,7 @@
   }
 
   // --- Renderiza el slider con botón "CHOOSE PLAN" sobresaliendo ---
-  function renderSlider(plans) {
+  function renderSlider(plans, allPackages) {
     root.innerHTML = '';
     const slider = document.createElement('div');
     slider.className = 'ewo-plans-slider';
@@ -232,29 +234,27 @@
       card.addEventListener('mouseleave', () => card.classList.remove('ewo-plan-card-featured'));
     });
 
-    // Evento de selección de plan
+    // Evento de selección de plan (abre modal)
     root.querySelectorAll('.ewo-plan-btn').forEach(btn => {
       btn.addEventListener('click', function(e) {
         const planId = this.getAttribute('data-plan-id');
         localStorage.setItem('ewo-selected-plan-id', planId);
-        // Refrescar el slider para marcar el activo
-        renderSlider(plans);
+        const planObj = plans.find(p => String(p.plan_id) === String(planId));
+        openUserAddonsModal(planObj, allPackages);
       });
     });
   }
 
-  // --- Cargar planes vía AJAX ---
+  // --- Cargar planes y addons vía AJAX ---
   async function loadPlans() {
     const code = getCoverageCode();
     const { lat, lng } = getLatLng();
     const nonce = window.ewoLocationServicesNonce || '';
-
-    // Log de depuración para ver los valores
     if (!code || !lat || !lng || !nonce) {
-      root.innerHTML = '<div class=\"ewo-plans-slider-loading\">Missing parameters.</div>';
+      root.innerHTML = '<div class="ewo-plans-slider-loading">Missing parameters.</div>';
       return;
     }
-    root.innerHTML = '<div class=\"ewo-plans-slider-loading\">Loading plans...</div>';
+    root.innerHTML = '<div class="ewo-plans-slider-loading">Loading plans...</div>';
     try {
       const formData = new FormData();
       formData.append('action', 'ewo_get_packages');
@@ -262,19 +262,22 @@
       formData.append('latitude', lat);
       formData.append('longitude', lng);
       formData.append('nonce', nonce);
-
       const res = await fetch('/wp-admin/admin-ajax.php', {
         method: 'POST',
         body: formData
       });
       const data = await res.json();
       if (data && data.success && data.data && Array.isArray(data.data.packages)) {
-        renderSlider(data.data.packages);
+        const allPackages = data.data.packages;
+        const plans = allPackages.filter(p => !p.display_as_addon);
+        // Guardar el array completo de paquetes en localStorage para el carrito
+        localStorage.setItem('ewo-all-packages', JSON.stringify(allPackages));
+        renderSlider(plans, allPackages);
       } else {
-        root.innerHTML = '<div class=\"ewo-plans-slider-loading\">No plans found for this location.</div>';
+        root.innerHTML = '<div class="ewo-plans-slider-loading">No plans found for this location.</div>';
       }
     } catch (e) {
-      root.innerHTML = '<div class=\"ewo-plans-slider-loading\">Error loading plans.</div>';
+      root.innerHTML = '<div class="ewo-plans-slider-loading">Error loading plans.</div>';
     }
   }
 

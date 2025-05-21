@@ -12,6 +12,8 @@ class Ewo_Location_Services_Admin {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_styles']);
+        // Nueva página de estilos y personalización
+        add_action('admin_menu', [$this, 'add_styles_customization_page']);
     }
     public function add_admin_menu() {
         add_menu_page(
@@ -32,6 +34,30 @@ class Ewo_Location_Services_Admin {
         .ewo-tab-content { background: #fff; border: 1px solid #e5e5e5; padding: 24px; border-radius: 0 4px 4px 4px; }
         .form-table th { width: 260px; }
         </style>';
+    }
+    public function add_styles_customization_page() {
+        add_submenu_page(
+            'ewo-location-services',
+            'Styles & Customization',
+            'Styles & Customization',
+            'manage_options',
+            'ewo-styles-customization',
+            [$this, 'render_styles_customization_page']
+        );
+    }
+    public function render_styles_customization_page() {
+        ?>
+        <div class="wrap">
+            <h1>Styles & Customization</h1>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('ewo_styles_customization_group');
+                do_settings_sections('ewo_styles_customization');
+                submit_button();
+                ?>
+            </form>
+        </div>
+        <?php
     }
     public function register_settings() {
         // General
@@ -70,6 +96,49 @@ class Ewo_Location_Services_Admin {
         register_setting('ewo_location_services_options', 'ewo_page_addons');
         register_setting('ewo_location_services_options', 'ewo_page_cart');
         register_setting('ewo_location_services_options', 'ewo_page_checkout');
+        // Registrar grupo y campos para estilos globales
+        register_setting('ewo_styles_customization_group', 'ewo_color_primary');
+        register_setting('ewo_styles_customization_group', 'ewo_color_secondary');
+        register_setting('ewo_styles_customization_group', 'ewo_color_alert');
+
+        add_settings_section(
+            'ewo_styles_colors_section',
+            'Global Color Variables',
+            function() {
+                echo '<p>Configure the global color variables for the plugin. These will be available as CSS variables in all templates.</p>';
+            },
+            'ewo_styles_customization'
+        );
+        add_settings_field(
+            'ewo_color_primary',
+            'Primary Color',
+            function() {
+                $val = get_option('ewo_color_primary', '#203F9A');
+                echo '<input type="color" name="ewo_color_primary" value="' . esc_attr($val) . '"> <span style="margin-left:8px;">' . esc_html($val) . '</span>';
+            },
+            'ewo_styles_customization',
+            'ewo_styles_colors_section'
+        );
+        add_settings_field(
+            'ewo_color_secondary',
+            'Secondary Color',
+            function() {
+                $val = get_option('ewo_color_secondary', '#58DCFC');
+                echo '<input type="color" name="ewo_color_secondary" value="' . esc_attr($val) . '"> <span style="margin-left:8px;">' . esc_html($val) . '</span>';
+            },
+            'ewo_styles_customization',
+            'ewo_styles_colors_section'
+        );
+        add_settings_field(
+            'ewo_color_alert',
+            'Alert Color',
+            function() {
+                $val = get_option('ewo_color_alert', '#FF4B4B');
+                echo '<input type="color" name="ewo_color_alert" value="' . esc_attr($val) . '"> <span style="margin-left:8px;">' . esc_html($val) . '</span>';
+            },
+            'ewo_styles_customization',
+            'ewo_styles_colors_section'
+        );
     }
     public function settings_page() {
         $tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general';

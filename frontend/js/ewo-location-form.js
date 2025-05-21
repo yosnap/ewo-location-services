@@ -551,6 +551,16 @@
       console.log('Respuesta AJAX:', data); // Debug
       // Extraer status de varias formas posibles
       if (data && data.success) {
+        // Guardar coverage_code si existe
+        let code = null;
+        if (data.data && data.data.raw) {
+          code = data.data.raw['return-data'] &&
+                 data.data.raw['return-data']['serviceability-info'] &&
+                 data.data.raw['return-data']['serviceability-info']['coverage_code'];
+          if (code) {
+            localStorage.setItem('ewo-coverage-code', code);
+          }
+        }
         if (data.data && data.data.status) {
           status = data.data.status.toLowerCase();
         } else if (data.status) {
