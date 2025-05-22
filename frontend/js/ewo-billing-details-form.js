@@ -2,6 +2,74 @@
 
 // Switch logic
 document.addEventListener('DOMContentLoaded', function() {
+  // --- Precargar datos del usuario si existen (compatibilidad con ambas claves) ---
+  const userDetails = JSON.parse(
+    localStorage.getItem('ewo_user_details') ||
+    localStorage.getItem('ewo-user-data') ||
+    '{}'
+  );
+  // Mapeo de nombres antiguos a nuevos
+  const nameMap = {
+    mobile: 'mobile_number',
+    referral: 'referral_code'
+  };
+  for (const key in userDetails) {
+    if (userDetails.hasOwnProperty(key)) {
+      const mappedKey = nameMap[key] || key;
+      const input = document.querySelector(`[name="${mappedKey}"]`);
+      if (input) input.value = userDetails[key];
+    }
+  }
+
+  // --- Precargar dirección estructurada si existe ---
+  const structuredAddress = JSON.parse(localStorage.getItem('ewo_structured_address') || '{}');
+  if (structuredAddress) {
+    if (structuredAddress.address_line_one && document.querySelector('[name="address_line_one"]')) {
+      document.querySelector('[name="address_line_one"]').value = structuredAddress.address_line_one;
+    }
+    if (structuredAddress.city && document.querySelector('[name="city"]')) {
+      document.querySelector('[name="city"]').value = structuredAddress.city;
+    }
+    if (structuredAddress.state && document.querySelector('[name="state"]')) {
+      document.querySelector('[name="state"]').value = structuredAddress.state;
+    }
+    if (structuredAddress.zip && document.querySelector('[name="zip"]')) {
+      document.querySelector('[name="zip"]').value = structuredAddress.zip;
+    }
+  }
+
+  // Precargar toggles Yes/No (cada uno por separado)
+  const toggles = [
+    'text_messages_for_operational_alerts',
+    'email_messages_for_operational_alerts',
+    'subscribe_to_text_payments',
+    'email_messages_for_wisper_news'
+  ];
+  toggles.forEach(name => {
+    const value = userDetails[name];
+    if (value) {
+      const hidden = document.getElementById(name);
+      if (hidden) hidden.value = value;
+      document.querySelectorAll(`.ewo-toggle-btn[data-target="${name}"]`).forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.value === value);
+      });
+    }
+  });
+
+  // --- Lógica de toggles: cada uno guarda su valor por separado ---
+  document.querySelectorAll('.ewo-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const target = this.dataset.target;
+      const value = this.dataset.value;
+      // Desactivar todos los botones del grupo
+      this.parentNode.querySelectorAll('.ewo-toggle-btn').forEach(b => b.classList.remove('active'));
+      // Activar el botón seleccionado
+      this.classList.add('active');
+      // Actualizar el input hidden correspondiente
+      document.getElementById(target).value = value;
+    });
+  });
+
   document.querySelectorAll('.ewo-switch').forEach(btn => {
     btn.addEventListener('click', function() {
       const target = this.dataset.target;
@@ -54,6 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const allPackages = JSON.parse(localStorage.getItem('ewo-all-packages') || '[]');
   const planId = localStorage.getItem('ewo-selected-plan-id');
   const addonsIds = JSON.parse(localStorage.getItem('ewo-selected-addons') || '[]');
+  console.log('[EWO] allPackages:', allPackages);
+  console.log('[EWO] planId:', planId);
+  console.log('[EWO] addonsIds:', addonsIds);
   const plan = allPackages.find(p => String(p.plan_id) === String(planId));
   const addons = allPackages.filter(p => addonsIds.map(String).includes(String(p.plan_id)));
 
@@ -64,6 +135,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   let tax = 0.00;
   let total = subtotal + tax;
+
+  if (!plan && !addons.length) {
+    console.warn('[EWO] No plan or addons found for cart. Check localStorage values.');
+  }
 
   if (document.getElementById('ewo-subtotal')) {
     document.getElementById('ewo-subtotal').textContent = '$' + subtotal.toFixed(2);

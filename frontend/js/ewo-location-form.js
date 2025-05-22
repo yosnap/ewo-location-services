@@ -27,14 +27,39 @@
   }
 
   // --- Helper: Save coordinates to localStorage ---
-  function saveLatLng(lat, lng) {
-    // Save coordinates in hidden fields (if present)
-    const latField = document.getElementById('ewo-latitude');
-    const lngField = document.getElementById('ewo-longitude');
-    if (latField) latField.value = lat;
-    if (lngField) lngField.value = lng;
-    // Save coordinates in localStorage for next steps
+  function saveCoordsAndReverseGeocode(lat, lng) {
     localStorage.setItem('ewo-location-coords', JSON.stringify({ lat, lng }));
+    reverseGeocodeAndSave(lat, lng);
+  }
+
+  // --- Reverse geocoding y guardado de dirección estructurada ---
+  function reverseGeocodeAndSave(lat, lng) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.address) {
+          const structured = {
+            address_line_one: (data.address.road || '') + (data.address.house_number ? ' ' + data.address.house_number : ''),
+            city: data.address.city || data.address.town || data.address.village || '',
+            state: data.address.state || '',
+            zip: data.address.postcode || ''
+          };
+          localStorage.setItem('ewo_structured_address', JSON.stringify(structured));
+          // Precargar en el formulario si ya está presente
+          if (document.querySelector('[name="address_line_one"]')) {
+            document.querySelector('[name="address_line_one"]').value = structured.address_line_one;
+          }
+          if (document.querySelector('[name="city"]')) {
+            document.querySelector('[name="city"]').value = structured.city;
+          }
+          if (document.querySelector('[name="state"]')) {
+            document.querySelector('[name="state"]').value = structured.state;
+          }
+          if (document.querySelector('[name="zip"]')) {
+            document.querySelector('[name="zip"]').value = structured.zip;
+          }
+        }
+      });
   }
 
   // --- Geocoding: Address to LatLng ---
@@ -277,7 +302,7 @@
         const lng = event.latLng.lng();
         const address = await reverseGeocode(lat, lng);
         showOverlay(address);
-        saveLatLng(lat, lng);
+        saveCoordsAndReverseGeocode(lat, lng);
       });
       map.addListener('click', async function(event) {
         const lat = event.latLng.lat();
@@ -287,7 +312,7 @@
         map.setZoom(config.mapZoom || 15);
         const address = await reverseGeocode(lat, lng);
         showOverlay(address);
-        saveLatLng(lat, lng);
+        saveCoordsAndReverseGeocode(lat, lng);
       });
       // Geolocate from overlay
       document.getElementById('ewo-map-geolocate').onclick = function(e) {
@@ -313,7 +338,7 @@
           }
           const address = await reverseGeocode(lat, lng);
           showOverlay(address);
-          saveLatLng(lat, lng);
+          saveCoordsAndReverseGeocode(lat, lng);
         }, function() {
           alert('Unable to retrieve your location.');
         });
@@ -361,7 +386,7 @@
         const latlng = marker.getLatLng();
         const address = await reverseGeocode(latlng.lat, latlng.lng);
         showOverlay(address);
-        saveLatLng(latlng.lat, latlng.lng);
+        saveCoordsAndReverseGeocode(latlng.lat, latlng.lng);
       });
       // Allow selecting location by clicking on the map
       map.on('click', async function(e) {
@@ -371,7 +396,7 @@
         map.setView([lat, lng], config.mapZoom || 15);
         const address = await reverseGeocode(lat, lng);
         showOverlay(address);
-        saveLatLng(lat, lng);
+        saveCoordsAndReverseGeocode(lat, lng);
       });
       // Geolocate from overlay
       document.getElementById('ewo-map-geolocate').onclick = function(e) {
@@ -397,7 +422,7 @@
           }
           const address = await reverseGeocode(lat, lng);
           showOverlay(address);
-          saveLatLng(lat, lng);
+          saveCoordsAndReverseGeocode(lat, lng);
         }, function() {
           alert('Unable to retrieve your location.');
         });
@@ -453,7 +478,7 @@
         }
         const address = await reverseGeocode(lat, lng);
         showOverlay(address);
-        saveLatLng(lat, lng);
+        saveCoordsAndReverseGeocode(lat, lng);
       }, function() {
         alert('Unable to retrieve your location.');
       });
@@ -482,7 +507,7 @@
         }
         const address = await reverseGeocode(lat, lng);
         showOverlay(address);
-        saveLatLng(lat, lng);
+        saveCoordsAndReverseGeocode(lat, lng);
       } else {
         // Geocode address
         const geo = await geocodeAddress(value);
@@ -498,7 +523,7 @@
             map.setView([geo.lat, geo.lng], 15);
           }
           showOverlay(geo.formatted);
-          saveLatLng(geo.lat, geo.lng);
+          saveCoordsAndReverseGeocode(lat, lng);
         } else {
           alert('Address not found.');
           return;
@@ -521,7 +546,7 @@
           map.setView([geo.lat, geo.lng], config.mapZoom || 15);
         }
         showOverlay(geo.formatted);
-        saveLatLng(geo.lat, geo.lng);
+        saveCoordsAndReverseGeocode(geo.lat, geo.lng);
       }
     }
   }

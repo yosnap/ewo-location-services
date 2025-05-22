@@ -291,6 +291,8 @@ class Ewo_Location_Step_Location {
     public function render_checkout_shortcode($atts = []) {
         // Encolar solo el CSS del billing details form
         wp_enqueue_style('ewo-billing-details-form', plugin_dir_url(__FILE__) . '../frontend/css/ewo-billing-details-form.css', [], null);
+        // Encolar el JS del billing details form
+        wp_enqueue_script('ewo-billing-details-form', plugin_dir_url(__FILE__) . '../frontend/js/ewo-billing-details-form.js', [], null, true);
         // Incluir solo el formulario Billing Details
         ob_start();
         include plugin_dir_path(__FILE__) . '../templates/ewo-billing-details-form.php';
