@@ -22,10 +22,6 @@ if (!defined('EWO_LOCATION_PLUGIN_URL')) {
 require_once EWO_LOCATION_PLUGIN_DIR . 'admin/ewo-location-services.php';
 require_once plugin_dir_path(__FILE__) . 'frontend/class-ewo-location.php';
 require_once EWO_LOCATION_PLUGIN_DIR . 'includes/class-ewo-location-loader.php';
-// Añadir: cargar la clase frontend para el formulario Billing Details
-require_once EWO_LOCATION_PLUGIN_DIR . 'frontend/class-ewo-location-services-frontend.php';
-global $ewo_location_services_frontend;
-$ewo_location_services_frontend = new EWO_Location_Services_Frontend();
 
 // Hooks de inicialización
 register_activation_hook(__FILE__, ['Ewo_Location_Services_Admin', 'activate']);

@@ -1,12 +1,6 @@
 <?php
 
 class EWO_Location_Services_Frontend {
-    public function __construct() {
-        // Registrar el shortcode del formulario Billing Details
-        add_shortcode('ewo_billing_details_form', [$this, 'render_billing_details_form']);
-        // Encolar scripts y estilos
-        add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
-    }
 
     public function enqueue_scripts() {
         // ... existing enqueues ...
@@ -37,14 +31,4 @@ class EWO_Location_Services_Frontend {
         ));
         // ... existing code ...
     }
-
-    public function render_billing_details_form($atts = []) {
-        ob_start();
-        include plugin_dir_path(__FILE__) . '../templates/ewo-billing-details-form.php';
-        return ob_get_clean();
-    }
-}
-
-// Instanciar la clase para que el shortcode esté disponible
-global $ewo_location_services_frontend;
-$ewo_location_services_frontend = new EWO_Location_Services_Frontend(); 
+} 

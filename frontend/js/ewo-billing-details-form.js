@@ -49,6 +49,50 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   }
+
+  // --- Cálculo de totales dinámicos para el checkout ---
+  const allPackages = JSON.parse(localStorage.getItem('ewo-all-packages') || '[]');
+  const planId = localStorage.getItem('ewo-selected-plan-id');
+  const addonsIds = JSON.parse(localStorage.getItem('ewo-selected-addons') || '[]');
+  const plan = allPackages.find(p => String(p.plan_id) === String(planId));
+  const addons = allPackages.filter(p => addonsIds.map(String).includes(String(p.plan_id)));
+
+  let subtotal = 0;
+  if (plan && plan.price) subtotal += parseFloat(plan.price);
+  addons.forEach(addon => {
+    if (addon.price) subtotal += parseFloat(addon.price);
+  });
+  let tax = 0.00;
+  let total = subtotal + tax;
+
+  if (document.getElementById('ewo-subtotal')) {
+    document.getElementById('ewo-subtotal').textContent = '$' + subtotal.toFixed(2);
+  }
+  if (document.getElementById('ewo-tax')) {
+    document.getElementById('ewo-tax').textContent = '$' + tax.toFixed(2);
+  }
+  if (document.getElementById('ewo-total')) {
+    document.getElementById('ewo-total').textContent = '$' + total.toFixed(2);
+  }
+
+  // --- Validación y acción del botón CHECKOUT ---
+  const checkoutBtn = document.querySelector('.ewo-checkout-btn');
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', function() {
+      const form = document.getElementById('ewo-billing-details-form');
+      if (!form) return;
+      // Validar el formulario antes de continuar
+      if (!form.reportValidity()) {
+        // El navegador mostrará los errores de validación nativos
+        return;
+      }
+      // Guardar los datos antes de redirigir
+      saveUserDetailsToLocalStorage();
+      // Aquí puedes enviar el formulario vía AJAX si lo necesitas
+      // Redirigir a la página de gracias
+      window.location.href = '/thank-you'; // Cambia por la URL real de tu página de gracias
+    });
+  }
 });
 
 // Guardar datos del formulario en localStorage

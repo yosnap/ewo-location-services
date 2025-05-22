@@ -163,42 +163,42 @@ class Ewo_Location_Services_Admin {
         // Selector de entorno
         $env = get_option('ewo_env', 'dev');
         echo '<table class="form-table">';
-        echo '<tr><th>Entorno actual</th><td>';
-        echo '<select name="ewo_env">';
-        echo '<option value="dev"' . selected($env, 'dev', false) . '>Desarrollo</option>';
-        echo '<option value="prod"' . selected($env, 'prod', false) . '>Producción</option>';
-        echo '</select></td></tr>';
-        // API Key global
-        echo '<tr><th>API Key (para endpoints)</th><td><input type="text" name="ewo_api_key" value="' . esc_attr(get_option('ewo_api_key')) . '" size="40" /></td></tr>';
-        // Endpoints agrupados
-        $endpoint_groups = [
-            'Serviceability Endpoints' => ['getServiceabilityDetails', 'getServiceableLocationsByLatLng'],
-            'Package Endpoints' => ['getPackages', 'getDiscountTemplates', 'addPackageToParent'],
-            'Customer Endpoints' => ['createCustomer', 'updateCustomer', 'createCustomerComment'],
-            'Opportunity Endpoints' => ['createOpportunity', 'updateOpportunity', 'getOpportunity'],
-        ];
-        foreach ($endpoint_groups as $group_label => $eps) {
-            echo "<tr><th colspan='2'><h3>$group_label</h3></th></tr>";
-            foreach ($eps as $ep) {
-                echo "<tr><th colspan='2'><h4>$ep</h4></th></tr>";
-                echo "<tr><th>Dev</th><td><input type='text' name='ewo_endpoint_{$ep}_dev' value='" . esc_attr(get_option("ewo_endpoint_{$ep}_dev")) . "' size='60' /></td></tr>";
-                echo "<tr><th>Prod</th><td><input type='text' name='ewo_endpoint_{$ep}_prod' value='" . esc_attr(get_option("ewo_endpoint_{$ep}_prod")) . "' size='60' /></td></tr>";
+            echo '<tr><th>Entorno actual</th><td>';
+            echo '<select name="ewo_env">';
+            echo '<option value="dev"' . selected($env, 'dev', false) . '>Desarrollo</option>';
+            echo '<option value="prod"' . selected($env, 'prod', false) . '>Producción</option>';
+            echo '</select></td></tr>';
+            // API Key global
+            echo '<tr><th>API Key (para endpoints)</th><td><input type="text" name="ewo_api_key" value="' . esc_attr(get_option('ewo_api_key')) . '" size="40" /></td></tr>';
+            // Endpoints agrupados
+            $endpoint_groups = [
+                'Serviceability Endpoints' => ['getServiceabilityDetails', 'getServiceableLocationsByLatLng'],
+                'Package Endpoints' => ['getPackages', 'getDiscountTemplates', 'addPackageToParent'],
+                'Customer Endpoints' => ['createCustomer', 'updateCustomer', 'createCustomerComment'],
+                'Opportunity Endpoints' => ['createOpportunity', 'updateOpportunity', 'getOpportunity'],
+            ];
+            foreach ($endpoint_groups as $group_label => $eps) {
+                echo "<tr><th colspan='2'><h3>$group_label</h3></th></tr>";
+                foreach ($eps as $ep) {
+                    echo "<tr><th colspan='2'><h4>$ep</h4></th></tr>";
+                    echo "<tr><th>Dev</th><td><input type='text' name='ewo_endpoint_{$ep}_dev' value='" . esc_attr(get_option("ewo_endpoint_{$ep}_dev")) . "' size='60' /></td></tr>";
+                    echo "<tr><th>Prod</th><td><input type='text' name='ewo_endpoint_{$ep}_prod' value='" . esc_attr(get_option("ewo_endpoint_{$ep}_prod")) . "' size='60' /></td></tr>";
+                }
             }
-        }
         echo '</table>';
         echo '</div>';
         echo '<div id="ewo-tab-content-maps" class="ewo-tab-content" style="display:none">';
-        $map_provider = get_option('ewo_map_provider', 'osm');
+            $map_provider = get_option('ewo_map_provider', 'osm');
         echo '<table class="form-table">';
-        echo '<tr><th>Proveedor de mapas</th><td>';
-        echo '<select name="ewo_map_provider" id="ewo_map_provider">';
-        echo '<option value="osm"' . selected($map_provider, 'osm', false) . '>OpenStreetMap (Leaflet)</option>';
-        echo '<option value="google"' . selected($map_provider, 'google', false) . '>Google Maps</option>';
-        echo '<option value="mapbox"' . selected($map_provider, 'mapbox', false) . '>Mapbox</option>';
-        echo '</select></td></tr>';
-        // API key solo si aplica
-        echo '<tr id="row_mapbox_api_key" style="display:' . ($map_provider === 'mapbox' ? 'table-row' : 'none') . '"><th>Mapbox API Key</th><td><input type="text" name="ewo_mapbox_api_key" value="' . esc_attr(get_option('ewo_mapbox_api_key')) . '" size="40" /></td></tr>';
-        echo '<tr id="row_google_maps_api_key" style="display:' . ($map_provider === 'google' ? 'table-row' : 'none') . '"><th>Google Maps API Key</th><td><input type="text" name="ewo_google_maps_api_key" value="' . esc_attr(get_option('ewo_google_maps_api_key')) . '" size="40" /></td></tr>';
+            echo '<tr><th>Proveedor de mapas</th><td>';
+            echo '<select name="ewo_map_provider" id="ewo_map_provider">';
+            echo '<option value="osm"' . selected($map_provider, 'osm', false) . '>OpenStreetMap (Leaflet)</option>';
+            echo '<option value="google"' . selected($map_provider, 'google', false) . '>Google Maps</option>';
+            echo '<option value="mapbox"' . selected($map_provider, 'mapbox', false) . '>Mapbox</option>';
+            echo '</select></td></tr>';
+            // API key solo si aplica
+            echo '<tr id="row_mapbox_api_key" style="display:' . ($map_provider === 'mapbox' ? 'table-row' : 'none') . '"><th>Mapbox API Key</th><td><input type="text" name="ewo_mapbox_api_key" value="' . esc_attr(get_option('ewo_mapbox_api_key')) . '" size="40" /></td></tr>';
+            echo '<tr id="row_google_maps_api_key" style="display:' . ($map_provider === 'google' ? 'table-row' : 'none') . '"><th>Google Maps API Key</th><td><input type="text" name="ewo_google_maps_api_key" value="' . esc_attr(get_option('ewo_google_maps_api_key')) . '" size="40" /></td></tr>';
         // Campo de zoom
         $map_zoom = get_option('ewo_map_zoom', 15);
         echo '<tr><th>Nivel de zoom al seleccionar punto</th><td>';
@@ -208,17 +208,17 @@ class Ewo_Location_Services_Admin {
         echo '</table>';
         echo '</div>';
         echo '<div id="ewo-tab-content-autocomplete" class="ewo-tab-content" style="display:none">';
-        $autocomplete_provider = get_option('ewo_autocomplete_provider', 'osm');
+            $autocomplete_provider = get_option('ewo_autocomplete_provider', 'osm');
         echo '<table class="form-table">';
-        echo '<tr><th>Proveedor de autocomplete</th><td>';
-        echo '<select name="ewo_autocomplete_provider" id="ewo_autocomplete_provider">';
-        echo '<option value="osm"' . selected($autocomplete_provider, 'osm', false) . '>Nominatim (OSM)</option>';
-        echo '<option value="google"' . selected($autocomplete_provider, 'google', false) . '>Google Places</option>';
-        echo '<option value="mapbox"' . selected($autocomplete_provider, 'mapbox', false) . '>Mapbox</option>';
-        echo '</select></td></tr>';
-        // API key solo si aplica
-        echo '<tr id="row_autocomplete_mapbox_api_key" style="display:' . ($autocomplete_provider === 'mapbox' ? 'table-row' : 'none') . '"><th>Mapbox API Key</th><td><input type="text" name="ewo_autocomplete_mapbox_api_key" value="' . esc_attr(get_option('ewo_autocomplete_mapbox_api_key')) . '" size="40" /></td></tr>';
-        echo '<tr id="row_autocomplete_google_api_key" style="display:' . ($autocomplete_provider === 'google' ? 'table-row' : 'none') . '"><th>Google Places API Key</th><td><input type="text" name="ewo_autocomplete_google_api_key" value="' . esc_attr(get_option('ewo_autocomplete_google_api_key')) . '" size="40" /></td></tr>';
+            echo '<tr><th>Proveedor de autocomplete</th><td>';
+            echo '<select name="ewo_autocomplete_provider" id="ewo_autocomplete_provider">';
+            echo '<option value="osm"' . selected($autocomplete_provider, 'osm', false) . '>Nominatim (OSM)</option>';
+            echo '<option value="google"' . selected($autocomplete_provider, 'google', false) . '>Google Places</option>';
+            echo '<option value="mapbox"' . selected($autocomplete_provider, 'mapbox', false) . '>Mapbox</option>';
+            echo '</select></td></tr>';
+            // API key solo si aplica
+            echo '<tr id="row_autocomplete_mapbox_api_key" style="display:' . ($autocomplete_provider === 'mapbox' ? 'table-row' : 'none') . '"><th>Mapbox API Key</th><td><input type="text" name="ewo_autocomplete_mapbox_api_key" value="' . esc_attr(get_option('ewo_autocomplete_mapbox_api_key')) . '" size="40" /></td></tr>';
+            echo '<tr id="row_autocomplete_google_api_key" style="display:' . ($autocomplete_provider === 'google' ? 'table-row' : 'none') . '"><th>Google Places API Key</th><td><input type="text" name="ewo_autocomplete_google_api_key" value="' . esc_attr(get_option('ewo_autocomplete_google_api_key')) . '" size="40" /></td></tr>';
         echo '</table>';
         echo '</div>';
         echo '<div id="ewo-tab-content-pages" class="ewo-tab-content" style="display:none">';

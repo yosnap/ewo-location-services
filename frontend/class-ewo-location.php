@@ -8,6 +8,7 @@ class Ewo_Location_Step_Location {
         add_shortcode('ewo_location_coverage', [$this, 'render_coverage_shortcode']);
         add_shortcode('ewo_location_plans_slider', [$this, 'render_plans_slider_shortcode']);
         add_shortcode('ewo_cart', [$this, 'render_cart_shortcode']);
+        add_shortcode('ewo_checkout', [$this, 'render_checkout_shortcode']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
         // Handler AJAX para cobertura
         add_action('wp_ajax_ewo_check_coverage', [$this, 'ajax_check_coverage']);
@@ -285,6 +286,15 @@ class Ewo_Location_Step_Location {
         $output = '';
         $output .= '<div id="ewo-cart-root"></div>';
         return $output;
+    }
+
+    public function render_checkout_shortcode($atts = []) {
+        // Encolar solo el CSS del billing details form
+        wp_enqueue_style('ewo-billing-details-form', plugin_dir_url(__FILE__) . '../frontend/css/ewo-billing-details-form.css', [], null);
+        // Incluir solo el formulario Billing Details
+        ob_start();
+        include plugin_dir_path(__FILE__) . '../templates/ewo-billing-details-form.php';
+        return ob_get_clean();
     }
 }
 
