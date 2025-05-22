@@ -126,6 +126,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
       saveUserDetailsToLocalStorage();
+      // --- Desactivado el POST: solo redirigir a /thank-you/ ---
+      window.location.href = '/thank-you/';
+      /*
       const payload = buildEwoOpportunityPayloadFromLocalStorage();
       payload.action = 'ewo_create_opportunity';
       fetch(window.ewoLocationConfig.ajax_url, {
@@ -145,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
       .catch(err => {
         alert('AJAX error: ' + err.message);
       });
+      */
     });
   }
 
