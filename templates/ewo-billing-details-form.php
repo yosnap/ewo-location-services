@@ -6,27 +6,27 @@
   <div class="ewo-row">
     <div class="ewo-col-2">
       <label for="first_name">First Name<span class="ewo-required">*</span></label>
-      <input type="text" id="first_name" name="first_name" required placeholder="Type Here...">
+      <input type="text" id="first_name" name="first_name" placeholder="Type Here...">
     </div>
     <div class="ewo-col-2">
       <label for="last_name">Last Name<span class="ewo-required">*</span></label>
-      <input type="text" id="last_name" name="last_name" required placeholder="Type Here...">
+      <input type="text" id="last_name" name="last_name" placeholder="Type Here...">
     </div>
   </div>
   <div class="ewo-row">
     <div class="ewo-col-2">
       <label for="email">Email Address<span class="ewo-required">*</span></label>
-      <input type="email" id="email" name="email" required placeholder="Type Here...">
+      <input type="email" id="email" name="email" placeholder="Type Here...">
     </div>
     <div class="ewo-col-2">
       <label for="mobile_number">Mobile Number<span class="ewo-required">*</span></label>
-      <input type="tel" id="mobile_number" name="mobile_number" required placeholder="Type Here...">
+      <input type="tel" id="mobile_number" name="mobile_number" placeholder="Type Here...">
     </div>
   </div>
   <div class="ewo-row">
     <div class="ewo-col-2">
       <label for="ad_source">How did you hear about us?<span class="ewo-required">*</span></label>
-      <select id="ad_source" name="ad_source" required>
+      <select id="ad_source" name="ad_source">
         <option value="">Choose Option</option>
         <option value="friend">Friend/Family</option>
         <option value="social">Social Media</option>
@@ -43,7 +43,7 @@
   <div class="ewo-row">
     <div class="ewo-col-1">
       <label for="address_line_one">Address Line 1<span class="ewo-required">*</span></label>
-      <input type="text" id="address_line_one" name="address_line_one" required placeholder="Type Here...">
+      <input type="text" id="address_line_one" name="address_line_one" placeholder="Type Here...">
     </div>
   </div>
   <div class="ewo-row">
@@ -55,23 +55,23 @@
   <div class="ewo-row">
     <div class="ewo-col-1">
       <label for="city">City<span class="ewo-required">*</span></label>
-      <input type="text" id="city" name="city" required placeholder="Type Here...">
+      <input type="text" id="city" name="city" placeholder="Type Here...">
     </div>
   </div>
   <div class="ewo-row">
     <div class="ewo-col-2">
       <label for="state">State<span class="ewo-required">*</span></label>
-      <input type="text" id="state" name="state" required placeholder="Type Here...">
+      <input type="text" id="state" name="state" placeholder="Type Here...">
     </div>
     <div class="ewo-col-2">
       <label for="zip">ZIP Code<span class="ewo-required">*</span></label>
-      <input type="text" id="zip" name="zip" required placeholder="Type Here...">
+      <input type="text" id="zip" name="zip" placeholder="Type Here...">
     </div>
   </div>
   <div class="ewo-row">
     <div class="ewo-col-2">
-      <label for="support_pin">Support Pin<span class="ewo-required">*</span></label>
-      <input type="text" id="support_pin" name="support_pin" required placeholder="Type Here...">
+      <label for="support_pin">Support Pin</label>
+      <input type="text" id="support_pin" name="support_pin" placeholder="Type Here...">
     </div>
     <div class="ewo-col-2">
       <small>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</small>
@@ -138,7 +138,7 @@
     <div class="ewo-col-2"></div>
     <div class="ewo-col-2">
       <div class="ewo-checkbox">
-        <input type="checkbox" id="agree_terms" name="agree_terms" required>
+        <input type="checkbox" id="agree_terms" name="agree_terms">
         <label for="agree_terms">
           I agree to the T&C's<br>
           <span style="font-weight:400; font-size:14px; color:#555;">By checking this box, I agree to the Terms & Conditions, Privacy Policy, and consent to receive communications regarding my order and service.</span>

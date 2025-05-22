@@ -101,12 +101,12 @@
 .ewo-banner-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #2346a0;
+  color: var(--ewo-primary);
   margin-bottom: 0.5rem;
 }
 .ewo-banner-subtitle {
   font-size: 1.1rem;
-  color: #2346a0;
+  color: var(--ewo-primary);
   margin-bottom: 0;
 }
 
@@ -141,7 +141,7 @@
   background: none;
   border: none;
   font-size: 1.5em;
-  color: #203F9A;
+  color: var(--ewo-primary);
   cursor: pointer;
   padding: 0 0.5em;
   border-radius: 50%;
@@ -151,8 +151,8 @@
   background: #eaf1ff;
 }
 .ewo-btn-primary {
-  background: #58DCFC !important;
-  color: #203F9A !important;
+  background: var(--ewo-secondary) !important;
+  color: var(--ewo-primary) !important;
   border: none !important;
   border-radius: 32px;
   padding: 0.9em 2em;
@@ -163,7 +163,7 @@
   box-shadow: 0 2px 8px rgba(30,40,90,0.08);
 }
 .ewo-btn-primary:hover {
-  background: #38c0e6;
+  background: var(--ewo-secondary);
 }
 
 .ewo-map-section {
@@ -205,11 +205,11 @@
   flex-direction: column;
   align-items: center;
   gap: 1.2rem;
-  color: #203F9A;
+  color: var(--ewo-primary);
   width: 100%;
 }
 .ewo-map-address-box .ewo-input {
-  color: #203F9A;
+  color: var(--ewo-primary);
   background: #f7faff;
   border: 1px solid #c3c3c3;
   border-radius: 32px;
@@ -223,7 +223,7 @@
 }
 .ewo-address-label {
   font-weight: 600;
-  color: #203F9A;
+  color: var(--ewo-primary);
   margin-bottom: 0.5rem;
 }
 

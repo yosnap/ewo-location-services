@@ -229,8 +229,8 @@
         <form class="ewo-hero-form" autocomplete="off" onsubmit="return false;">
           <div class="ewo-hero-input-group">
             <input type="text" id="ewo-hero-address-input" class="ewo-input ewo-autocomplete" placeholder="123, Street Name, City, State, Zip Code" autocomplete="off" />
-            <button type="button" id="ewo-hero-geolocate" class="ewo-geolocate-btn" title="Use my location">📍</button>
-            <button type="submit" id="ewo-hero-check" class="ewo-btn ewo-btn-primary">Check Availability</button>
+            <button type="button" id="ewo-hero-geolocate" class="ewo-geolocate-btn ewo-btn-geolocate" title="Use my location"><i class="fa-solid fa-location-crosshairs"></i></button>
+            <button type="submit" id="ewo-hero-check" class="ewo-btn ewo-btn-primary ewo-btn-check"><i class="fa-solid fa-magnifying-glass ewo-btn-icon"></i>Check Availability</button>
           </div>
         </form>
         <div id="ewo-form-container"></div>

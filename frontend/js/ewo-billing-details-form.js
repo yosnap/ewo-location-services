@@ -90,14 +90,44 @@ document.addEventListener('DOMContentLoaded', function() {
   if (form) {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
-      if (!document.getElementById('agree_terms').checked) {
-        alert("You must agree to the T&C's to continue.");
-        return false;
+      // Limpiar errores previos
+      form.querySelectorAll('.ewo-field-error').forEach(el => el.classList.remove('ewo-field-error'));
+      hidePopover();
+      // Validar campos requeridos manualmente
+      const requiredNames = [
+        'first_name', 'last_name', 'email', 'mobile_number', 'ad_source',
+        'address_line_one', 'city', 'state', 'zip'
+      ];
+      let firstInvalid = null;
+      requiredNames.forEach(name => {
+        const field = form.querySelector(`[name="${name}"]`);
+        if (field && (!field.value || (field.tagName === 'SELECT' && field.value === ''))) {
+          field.classList.add('ewo-field-error');
+          if (!firstInvalid) firstInvalid = field;
+        }
+      });
+      // Validar checkbox de términos
+      const agreeTerms = document.getElementById('agree_terms');
+      if (!agreeTerms.checked) {
+        agreeTerms.classList.add('ewo-field-error');
+        if (!firstInvalid) firstInvalid = agreeTerms;
+      }
+      if (firstInvalid) {
+        firstInvalid.focus();
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Solo mostrar el popover si el error es el checkbox y no hay otros errores
+        const onlyCheckboxError = (firstInvalid === agreeTerms) && requiredNames.every(name => {
+          const field = form.querySelector(`[name="${name}"]`);
+          return !field || field.value || (field.tagName === 'SELECT' && field.value !== '');
+        });
+        if (onlyCheckboxError) {
+          showPopover(agreeTerms, "You must agree to the T&C's to continue.");
+        }
+        return;
       }
       saveUserDetailsToLocalStorage();
       const payload = buildEwoOpportunityPayloadFromLocalStorage();
       payload.action = 'ewo_create_opportunity';
-
       fetch(window.ewoLocationConfig.ajax_url, {
         method: 'POST',
         headers: { 'Accept': 'application/json' },
@@ -151,22 +181,20 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // --- Validación y acción del botón CHECKOUT ---
-  const checkoutBtn = document.querySelector('.ewo-checkout-btn');
-  if (checkoutBtn) {
-    checkoutBtn.addEventListener('click', function() {
-      const form = document.getElementById('ewo-billing-details-form');
-      if (!form) return;
-      // Validar el formulario antes de continuar
-      if (!form.reportValidity()) {
-        // El navegador mostrará los errores de validación nativos
-        return;
+  // Eliminar cualquier handler de click directo en .ewo-checkout-btn que haga redirección
+  // Toda la lógica de envío/redirección está en el submit del formulario
+
+  // Quitar el error visual del checkbox cuando el usuario lo marque y ocultar el popover
+  const agreeTerms = document.getElementById('agree_terms');
+  if (agreeTerms) {
+    agreeTerms.addEventListener('change', function() {
+      if (this.checked) {
+        this.classList.remove('ewo-field-error');
+        hidePopover();
       }
-      // Guardar los datos antes de redirigir
-      saveUserDetailsToLocalStorage();
-      // Aquí puedes enviar el formulario vía AJAX si lo necesitas
-      // Redirigir a la página de gracias
-      window.location.href = '/thank-you'; // Cambia por la URL real de tu página de gracias
     });
+    agreeTerms.addEventListener('focus', hidePopover);
+    agreeTerms.addEventListener('click', hidePopover);
   }
 });
 
@@ -206,4 +234,21 @@ function buildEwoOpportunityPayloadFromLocalStorage() {
   }
 
   return payload;
+}
+
+function showPopover(target, message) {
+  // Elimina popovers previos
+  document.querySelectorAll('.ewo-popover').forEach(p => p.remove());
+  const popover = document.createElement('div');
+  popover.className = 'ewo-popover';
+  popover.innerHTML = message + '<div class="ewo-popover-arrow"></div>';
+  // Posicionar relativo al checkbox
+  const parent = target.closest('.ewo-checkbox');
+  if (parent) {
+    parent.appendChild(popover);
+  }
+}
+
+function hidePopover() {
+  document.querySelectorAll('.ewo-popover').forEach(p => p.remove());
 } 
