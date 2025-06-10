@@ -1,0 +1,100 @@
+.ewo-plans-slider {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 2rem 0;
+}
+.ewo-plans-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: 2rem;
+  scroll-behavior: smooth;
+}
+.ewo-plan-card {
+  flex: 0 0 320px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px rgba(32,63,154,0.08);
+  border: 2px solid var(--ewo-secondary);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  scroll-snap-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 420px;
+}
+.ewo-plan-card h3 {
+  color: #203F9A;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.ewo-plan-card .ewo-plan-speed {
+  color: #203F9A;
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.ewo-plan-card .ewo-plan-price {
+  color: #58DCFC;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.ewo-plan-card ul {
+  margin: 1rem 0 0 0;
+  padding: 0 0 0 1.2rem;
+  color: #203F9A;
+  font-size: 1rem;
+  text-align: left;
+}
+.ewo-plan-card .ewo-plan-btn {
+  margin-top: 1.5rem;
+  background: #203F9A;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 0.7em 2em;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+.ewo-plan-card .ewo-plan-btn:hover {
+  background: var(--ewo-primary);
+  color: #fff;
+  border: 2px solid var(--ewo-primary);
+}
+.ewo-slider-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #203F9A;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+}
+.ewo-slider-arrow.left { left: 0.5rem; }
+.ewo-slider-arrow.right { right: 0.5rem; }
+.ewo-plans-slider-loading {
+  text-align: center;
+  color: #203F9A;
+  font-size: 1.2rem;
+  padding: 2rem 0;
+}
+@media (max-width: 600px) {
+  .ewo-plan-card { flex-basis: 90vw; min-width: 260px; }
+  .ewo-plans-track { gap: 1rem; }
+  .ewo-slider-arrow { width: 36px; height: 36px; font-size: 1.5rem; }
+} 

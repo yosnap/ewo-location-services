@@ -1,0 +1,240 @@
+/* EWO Checkout Styles - Modern UI for Billing Details and Basket Total */
+
+.ewo-checkout-form {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 0;
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+.ewo-checkout-form label {
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+  font-size: 15px;
+  color: #222;
+}
+
+.ewo-checkout-form input,
+.ewo-checkout-form select {
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  width: 100%;
+  font-size: 16px;
+  background: #fafbfc;
+  transition: border 0.2s;
+}
+.ewo-checkout-form input:focus,
+.ewo-checkout-form select:focus {
+  border-color: var(--ewo-secondary);
+  outline: none;
+}
+
+.ewo-checkout-form .ewo-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 0;
+}
+.ewo-checkout-form .ewo-col-2 {
+  flex: 1 1 0;
+}
+
+.ewo-checkout-form .ewo-col-1 {
+  flex: 1 1 100%;
+}
+
+.ewo-checkout-form .ewo-section-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #222;
+}
+
+.ewo-checkout-form hr {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 32px 0 24px 0;
+}
+
+/* Toggle group alineado a la derecha */
+.ewo-toggle-group {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.ewo-col-2 > label {
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.ewo-toggle-btn {
+  background: #e0e0e0;
+  color: #222;
+  border-radius: 20px;
+  padding: 8px 24px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  transition: background 0.2s, color 0.2s;
+}
+.ewo-toggle-btn.active,
+.ewo-toggle-btn:focus,
+.ewo-toggle-btn:hover {
+  background: var(--ewo-secondary);
+  color: #222;
+}
+
+/* Basket Total */
+.ewo-basket-total {
+  border-top: 1px solid #e0e0e0;
+  margin-top: 32px;
+  padding-top: 16px;
+  max-width: 600px;
+  margin-left: auto;
+}
+.ewo-basket-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 16px;
+  color: #222;
+}
+.ewo-basket-total-row.total {
+  font-weight: bold;
+  font-size: 18px;
+}
+
+/* Checkout Button */
+.ewo-checkout-btn {
+  background: var(--ewo-secondary);
+  color: #222;
+  border: none;
+  border-radius: 24px;
+  padding: 14px 48px;
+  font-size: 18px;
+  font-weight: bold;
+  float: right;
+  margin-top: 24px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(78, 227, 255, 0.12);
+}
+.ewo-checkout-btn:hover {
+  background: #2ad2ff;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .ewo-checkout-form .ewo-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .ewo-basket-total {
+    max-width: 100%;
+  }
+}
+
+/* Checkbox legal alineado */
+.ewo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  margin-top: 24px;
+  font-size: 15px;
+  color: #222;
+  position: relative;
+}
+.ewo-checkbox input[type="checkbox"] {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+}
+.ewo-checkbox label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+.ewo-checkbox input[type="checkbox"]:checked {
+  accent-color: var(--ewo-secondary);
+  background: var(--ewo-secondary);
+  border-color: var(--ewo-secondary);
+}
+.ewo-checkbox input[type="checkbox"].ewo-field-error {
+  outline: 2px solid #e53935 !important;
+  box-shadow: 0 0 0 2px #fff0f0;
+}
+
+/* Helper text */
+.ewo-checkout-form .ewo-helper-text {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 12px;
+}
+
+/* Section spacing */
+.ewo-checkout-form .ewo-section {
+  margin-bottom: 32px;
+}
+
+/* Required asterisk */
+.ewo-required {
+  color: #e53935;
+  font-weight: bold;
+  margin-left: 2px;
+  font-size: 1em;
+}
+
+/* Toggle flex row: label y grupo alineados horizontalmente */
+.ewo-toggle-flex-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 4px;
+  }
+.ewo-toggle-label {
+  min-width: 220px;
+  font-weight: 700;
+  font-size: 15px;
+  margin-right: 8px;
+}
+
+.ewo-field-error {
+  border: 2px solid #e53935 !important;
+  background: #fff0f0 !important;
+}
+
+.ewo-popover {
+  position: absolute;
+  left: 36px;
+  top: -38px;
+  background: #222;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0.95;
+}
+.ewo-popover-arrow {
+  position: absolute;
+  left: 16px;
+  bottom: -8px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #222;
+} 

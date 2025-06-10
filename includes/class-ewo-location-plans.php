@@ -30,15 +30,13 @@ class Ewo_Location_Plans {
             wp_send_json_error(['message' => 'Missing coverage_code']);
         }
         // Obtener configuración del plugin y entorno
-        $options = get_option('ewo_location_services_options');
-        $environment = isset($options['api_environment']) ? $options['api_environment'] : 'development';
-        $api_key = isset($options['api_key']) ? $options['api_key'] : '';
-        // Determinar la URL del endpoint basada en el entorno
+        $env = get_option('ewo_env', 'dev');
+        $api_key = get_option('ewo_api_key', '');
         $api_url = '';
-        if ($environment === 'development') {
-            $api_url = isset($options['dev_get_packages_url']) ? $options['dev_get_packages_url'] : '';
+        if ($env === 'prod') {
+            $api_url = get_option('ewo_endpoint_getPackages_prod', '');
         } else {
-            $api_url = isset($options['prod_get_packages_url']) ? $options['prod_get_packages_url'] : '';
+            $api_url = get_option('ewo_endpoint_getPackages_dev', '');
         }
         if (empty($api_key) || empty($api_url)) {
             wp_send_json_error(['message' => 'API configuration missing']);
@@ -54,6 +52,7 @@ class Ewo_Location_Plans {
             'body'    => json_encode($payload),
             'headers' => [
                 'Content-Type' => 'application/json',
+                'api-key' => $api_key
             ],
             'timeout' => 15,
         ]);
@@ -66,18 +65,8 @@ class Ewo_Location_Plans {
             wp_send_json_error(['message' => 'No plans found']);
         }
         $all_plans = $data['return-data']['package-data'];
-        $main_plans = [];
-        $addons = [];
-        foreach ($all_plans as $plan) {
-            if (!empty($plan['display_as_addon'])) {
-                $addons[] = $plan;
-            } else {
-                $main_plans[] = $plan;
-            }
-        }
         wp_send_json_success([
-            'packages' => $main_plans,
-            'addons' => $addons,
+            'packages' => $all_plans,
         ]);
     }
 } 

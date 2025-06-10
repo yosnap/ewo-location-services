@@ -1,0 +1,288 @@
+/* EWO Form Styles - Modern, theme-proof, Figma-like */
+
+.ewo-form {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 0;
+  font-family: 'Inter', Arial, sans-serif !important;
+  background: none;
+}
+
+.ewo-form label {
+  font-weight: 700 !important;
+  margin-bottom: 6px;
+  display: block;
+  font-size: 16px !important;
+  color: #222 !important;
+  letter-spacing: 0.01em;
+}
+
+.ewo-form input,
+.ewo-form select,
+.ewo-form textarea {
+  border-radius: 32px !important;
+  border: 1.5px solid #e0e0e0 !important;
+  padding: 16px 22px !important;
+  margin-bottom: 18px !important;
+  width: 100% !important;
+  font-size: 17px !important;
+  background: #fff !important;
+  color: #222 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: border 0.2s;
+  font-family: 'Inter', Arial, sans-serif !important;
+}
+.ewo-form input::placeholder,
+.ewo-form textarea::placeholder {
+  color: #b5b5b5 !important;
+  opacity: 1 !important;
+  font-weight: 400 !important;
+}
+.ewo-form input:focus,
+.ewo-form select:focus,
+.ewo-form textarea:focus {
+  border-color: var(--ewo-secondary) !important;
+  background: #fff !important;
+}
+
+.ewo-form .ewo-row {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 0;
+}
+.ewo-form .ewo-col-2 {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.ewo-form .ewo-col-1 {
+  flex: 1 1 100%;
+}
+.ewo-form .ewo-col-1.rent-own-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ewo-form .ewo-section-title {
+  font-size: 22px !important;
+  font-weight: 900 !important;
+  margin-bottom: 22px;
+  color: #222 !important;
+  letter-spacing: 0.01em;
+}
+
+.ewo-form hr {
+  border: none;
+  border-top: 1.5px solid #e0e0e0;
+  margin: 32px 0 24px 0;
+}
+.ad_source label, .ad_source select {
+  flex-basis: calc(50% - 0.5rem);
+  flex-grow: 1;
+  max-width: 100%;
+  min-width: 50%;
+}
+.ewo-col-2.ad_source {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.ad_source select {
+  flex: 1;
+  padding: 0.8em 1.2em;
+  border-radius: 24px;
+  border: 1.5px solid #b5d2f7;
+  font-size: 1rem;
+  background: #fff;
+  color: #203F9A;
+  font-weight: 500;
+}
+/* Toggle group alineado a la derecha */
+.ewo-form .ewo-toggle-group {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.ewo-form .ewo-col-2 > label {
+  display: flex;
+  align-items: center;
+  font-weight: 700 !important;
+  margin-bottom: 6px;
+}
+.ewo-form .ewo-toggle-btn {
+  background: #e0e0e0 !important;
+  color: #222 !important;
+  border-radius: 24px !important;
+  padding: 10px 32px !important;
+  border: none !important;
+  cursor: pointer;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  transition: background 0.2s, color 0.2s;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.ewo-form .ewo-toggle-btn.active,
+.ewo-form .ewo-toggle-btn:focus,
+.ewo-form .ewo-toggle-btn:hover {
+  background: var(--ewo-secondary) !important;
+  color: #fff !important;
+}
+
+/* Basket Total */
+.ewo-form .ewo-basket-total {
+  border-top: 1.5px solid #e0e0e0;
+  margin-top: 32px;
+  padding-top: 16px;
+  max-width: 600px;
+  margin-left: auto;
+  background: none;
+}
+.ewo-form .ewo-basket-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 17px;
+  color: #222;
+}
+.ewo-form .ewo-basket-total-row.total {
+  font-weight: bold;
+  font-size: 19px;
+}
+
+/* Checkout Button */
+.ewo-form .ewo-checkout-btn {
+  background: var(--ewo-secondary) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 32px !important;
+  padding: 18px 0 !important;
+  font-size: 19px !important;
+  font-weight: 900 !important;
+  width: 100% !important;
+  margin-top: 32px !important;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(78, 227, 255, 0.12) !important;
+  letter-spacing: 0.01em;
+}
+.ewo-form .ewo-checkout-btn:hover {
+  background: #2ad2ff !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .ewo-form .ewo-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .ewo-form .ewo-basket-total {
+    max-width: 100%;
+  }
+}
+
+/* Checkbox legal alineado */
+.ewo-form .ewo-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  margin-top: 24px;
+  font-size: 15px;
+  color: #222;
+  position: relative;
+}
+.ewo-form .ewo-checkbox input[type="checkbox"] {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+}
+.ewo-form .ewo-checkbox label {
+  margin: 0;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+}
+.ewo-form .ewo-checkbox input[type="checkbox"]:checked {
+  accent-color: var(--ewo-secondary) !important;
+  background: var(--ewo-secondary) !important;
+  border-color: var(--ewo-secondary) !important;
+}
+.ewo-form .ewo-checkbox input[type="checkbox"].ewo-field-error {
+  outline: 2px solid #e53935 !important;
+  box-shadow: 0 0 0 2px #fff0f0 !important;
+}
+
+/* Helper text */
+.ewo-form .ewo-helper-text {
+  font-size: 13px !important;
+  color: #888 !important;
+  margin-bottom: 12px !important;
+}
+
+/* Section spacing */
+.ewo-form .ewo-section {
+  margin-bottom: 32px !important;
+}
+
+/* Required asterisk */
+.ewo-form .ewo-required {
+  color: #e53935 !important;
+  font-weight: bold !important;
+  margin-left: 2px;
+  font-size: 1em;
+}
+
+/* Toggle flex row: label y grupo alineados horizontalmente */
+.ewo-form .ewo-toggle-flex-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ewo-form .ewo-toggle-label {
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  color: #222 !important;
+}
+
+.ewo-form .ewo-field-error {
+  border: 1.5px solid #e53935 !important;
+  background: #fff0f0 !important;
+}
+
+.ewo-form .ewo-popover {
+  position: absolute;
+  z-index: 100;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(32,63,154,0.12);
+  padding: 16px 20px;
+  font-size: 15px;
+  color: #203F9A;
+  min-width: 220px;
+  max-width: 320px;
+  left: 0;
+  top: 100%;
+  margin-top: 8px;
+}
+
+.ewo-form .ewo-popover-arrow {
+  position: absolute;
+  top: -8px;
+  left: 32px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 8px rgba(32,63,154,0.08);
+} 

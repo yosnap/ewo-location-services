@@ -1,0 +1,257 @@
+/* Estilos base para el formulario multipaso EWO */
+#ewo-location-root {
+  width: 100%;
+  background: #fff;
+}
+.ewo-form-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.ewo-input {
+  padding: 0.7em 1em;
+  border: 1px solid #c3c3c3;
+  border-radius: 6px;
+  font-size: 1.1em;
+}
+.ewo-btn {
+  background: var(--ewo-secondary);
+  color: var(--ewo-primary);
+  border: none;
+  border-radius: 6px;
+  padding: 0.7em 1.5em;
+  font-size: 1em;
+  font-weight: 700 !important;
+  cursor: pointer;
+  height: 60px;
+  /*margin-top: 0.5em;*/
+  transition: background 0.2s;
+}
+.ewo-btn:hover {
+  background: #16307a;
+}
+
+.ewo-hero {
+  position: relative;
+  width: 100vw;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  min-height: 540px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.ewo-hero-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+.ewo-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(32, 63, 154, 0.55);
+  z-index: 2;
+}
+.ewo-hero-content {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  text-align: center;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+.ewo-hero-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.ewo-hero-desc {
+  font-size: 1.15rem;
+  font-weight: 400;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.12);
+}
+@media (min-width: 700px) {
+  /*.ewo-hero {
+    min-height: 80vh;
+    height: 80vh;
+  }*/
+  .ewo-hero-title {
+    font-size: 3rem;
+  }
+  .ewo-hero-content {
+    max-width: 700px;
+  }
+}
+
+.ewo-banner {
+  width: 100%;
+  text-align: center;
+  margin: 0 auto 2rem auto;
+  padding: 2.5rem 1rem 1.5rem 1rem;
+  background: #fff;
+}
+.ewo-banner-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--ewo-primary);
+  margin-bottom: 0.5rem;
+}
+.ewo-banner-subtitle {
+  font-size: 1.1rem;
+  color: var(--ewo-primary);
+  margin-bottom: 0;
+}
+
+.ewo-hero-form {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.ewo-hero-input-group {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 32px;
+  box-shadow: 0 2px 12px rgba(30,40,90,0.10);
+  /*padding: 0.25rem 0.5rem;*/
+  gap: 0.5rem;
+  overflow: hidden;
+  width: 100%;
+  max-width: 740px;
+}
+.ewo-hero-input-group #ewo-hero-geolocate, .ewo-map-address-box #ewo-map-geolocate {
+  border: none;
+  background: transparent;
+}
+.ewo-input.ewo-autocomplete {
+  border: none;
+  outline: none;
+  font-size: 1.1em;
+  padding: 0.9em 1.2em;
+  border-radius: 32px;
+  flex: 1 1 auto;
+  color: #203F9A;
+  background: transparent;
+}
+.ewo-geolocate-btn {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  color: var(--ewo-primary);
+  cursor: pointer;
+  padding: 0 0.5em;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+.ewo-geolocate-btn:hover {
+  background: #eaf1ff;
+}
+.ewo-btn-primary {
+  background: var(--ewo-secondary) !important;
+  color: var(--ewo-primary) !important;
+  border: none !important;
+  border-radius: 32px;
+  padding: 0.9em 2em;
+  font-size: 1.1em;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(30,40,90,0.08);
+}
+.ewo-btn-primary:hover {
+  background: var(--ewo-secondary);
+}
+
+.ewo-map-section {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: #eaf1ff;
+}
+.ewo-map-container {
+  width: 100vw;
+  max-width: 100vw;
+  height: 520px;
+  border-radius: 0;
+  box-shadow: none;
+  background: #dbeafe;
+  overflow: hidden;
+}
+.ewo-map-overlay-form {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  justify-content: center;
+  z-index: 999;
+}
+.ewo-map-address-box {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 16px rgba(30,40,90,0.10);
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  color: var(--ewo-primary);
+  width: 100%;
+}
+.ewo-map-address-box .ewo-input {
+  color: var(--ewo-primary);
+  background: #f7faff;
+  border: 1px solid #c3c3c3;
+  border-radius: 32px;
+  font-size: 1.1em;
+  padding: 0.9em 1.2em;
+  width: 100%;
+}
+.ewo-map-address-box .ewo-btn-primary {
+  width: 100%;
+  margin-top: 0.5em;
+}
+.ewo-address-label {
+  font-weight: 600;
+  color: var(--ewo-primary);
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .ewo-map-section {
+    padding: 1.5rem 0 2rem 0;
+  }
+  .ewo-map-container {
+    height: 280px;
+  }
+  .ewo-map-overlay-form {
+    top: 10px;
+    max-width: 98vw;
+  }
+  .ewo-map-address-box {
+    padding: 1.2rem 1rem;
+    min-width: 0;
+    max-width: 98vw;
+  }
+} 

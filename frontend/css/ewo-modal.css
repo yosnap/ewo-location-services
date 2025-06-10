@@ -1,0 +1,122 @@
+.ewo-modal-overlay {
+  display: flex;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20,30,50,0.7);
+  animation: ewoFadeIn 0.2s;
+}
+@keyframes ewoFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.ewo-modal {
+  background: #eaf4ff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(32,63,154,0.18);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  min-width: 340px;
+  max-width: 800px;
+  width: 98vw;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: ewoPopIn 0.2s;
+}
+@keyframes ewoPopIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.ewo-modal .ewo-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--ewo-primary);
+  cursor: pointer;
+  z-index: 2;
+}
+
+.ewo-modal .ewo-modal-title {
+  color: var(--ewo-primary);
+  font-size: 2rem;
+  font-weight: 900;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.ewo-modal .ewo-modal-subtitle {
+  color: var(--ewo-primary);
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.ewo-modal .ewo-user-form, .ewo-modal .ewo-request-callback-form {
+  width: 100%;
+}
+.ewo-modal .ewo-user-fields-row, .ewo-modal .ewo-form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+.ewo-modal .ewo-user-fields-row input,
+.ewo-modal .ewo-user-fields-row select,
+.ewo-modal .ewo-user-fields-row textarea,
+.ewo-modal .ewo-form-row input,
+.ewo-modal .ewo-form-row select,
+.ewo-modal .ewo-form-row textarea {
+  flex: 1;
+  padding: 0.8em 1.2em !important;
+  border-radius: 24px !important;
+  border: 1.5px solid #b5d2f7 !important;
+  font-size: 1rem;
+  background: #fff;
+  color: var(--ewo-primary);
+  font-weight: 500;
+  -webkit-border-radius: 24px !important;
+  -moz-border-radius: 24px !important;
+  -ms-border-radius: 24px !important;
+  -o-border-radius: 24px !important;
+}
+.ewo-modal .ewo-user-fields-row textarea, .ewo-modal .ewo-form-row textarea {
+  border-radius: 16px;
+}
+
+.ewo-modal .ewo-btn-primary, .ewo-modal .ewo-review-cart-btn {
+  margin-top: 1.5rem;
+  width: 100%;
+  background: #7bbdff;
+  color: var(--ewo-primary);
+  border: none;
+  border-radius: 24px;
+  padding: 0.9em 0;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.ewo-modal .ewo-btn-primary:active, .ewo-modal .ewo-btn-primary:focus, .ewo-modal .ewo-review-cart-btn:active, .ewo-modal .ewo-review-cart-btn:focus {
+  background: var(--ewo-primary);
+  color: #fff;
+}
+
+.ewo-modal .ewo-request-callback-success {
+  color: var(--ewo-primary);
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+@media (max-width: 600px) {
+  .ewo-modal { padding: 1.2rem 0.5rem 1rem 0.5rem; min-width: 0; }
+  .ewo-modal .ewo-user-fields-row, .ewo-modal .ewo-form-row { flex-direction: column; gap: 0.5rem; }
+}
+body.ewo-modal-open { overflow: hidden !important; } 
